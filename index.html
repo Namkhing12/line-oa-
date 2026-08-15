@@ -87,7 +87,7 @@
               <i class="fa-regular fa-envelope"></i> อีเมล <span class="required">*</span>
             </label>
             <div class="input-wrapper">
-              <input type="email" id="email" class="form-control" required placeholder="">
+              <input type="email" id="email" class="form-control" required placeholder="name@example.com">
               <i class="fa-solid fa-envelope input-icon"></i>
             </div>
             <div class="error-msg" id="emailError"><i class="fa-solid fa-circle-exclamation"></i> <span>กรุณากรอกรูปแบบอีเมลให้ถูกต้อง (เช่น name@example.com)</span></div>
@@ -350,14 +350,13 @@
               document.getElementById("lineDisplayName").value = profile.displayName;
               document.getElementById("linePictureUrl").value = profile.pictureUrl || "";
 
-              // Auto-fill Email from Decoded ID Token if available
+              // Auto-fill Email from Decoded ID Token if available (User can still edit freely)
               try {
                 const decodedToken = liff.getDecodedIDToken();
                 if (decodedToken && decodedToken.email) {
                   const emailInput = document.getElementById("email");
-                  if (emailInput) {
+                  if (emailInput && !emailInput.value) {
                     emailInput.value = decodedToken.email;
-                    emailInput.readOnly = true;
                   }
                 }
               } catch (tokenErr) {
