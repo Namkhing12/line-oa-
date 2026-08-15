@@ -1377,18 +1377,12 @@
       }
     });
 
-    // Close LIFF Window or Redirect to LINE App
+    // Close LIFF Window or Web View
     function closeLiffWindow() {
       if (typeof liff !== "undefined" && liff.isInClient && liff.isInClient()) {
-        try {
-          liff.closeWindow();
-        } catch (err) {
-          console.warn("Could not close LIFF window directly, redirecting to LINE:", err);
-          window.location.href = CONFIG.LIFF_URL || "https://line.me";
-        }
+        liff.closeWindow();
       } else {
-        // Redirect external browser to LINE App / LIFF URL
-        window.location.href = CONFIG.LIFF_URL || "https://line.me";
+        alert("ขอบคุณสำหรับการลงทะเบียน สามารถปิดหน้านี้ได้ทันที");
       }
     }
 
