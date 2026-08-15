@@ -755,7 +755,7 @@
           <button type="button" class="banner-close" onclick="hideGlobalBanner()" title="ปิด"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <form id="regForm">
+        <form id="regForm" novalidate>
           <!-- Hidden Inputs for LINE Credentials -->
           <input type="hidden" id="lineUserId" value="">
           <input type="hidden" id="lineDisplayName" value="">
@@ -1252,12 +1252,20 @@
       // Unhappy Case 5: Validate PDPA Consent Checkbox
       const pdpaConsent = document.getElementById("pdpaConsent").checked;
       if (!pdpaConsent) {
-        showFieldError("pdpaBox", "pdpaError", "กรุณากดยินยอมนโยบาย PDPA ก่อนทำการลงทะเบียน");
+        showFieldError("pdpaBox", "pdpaError", "กรุณากดยินยอมนโยบายความเป็นส่วนตัว (PDPA) ก่อนทำการลงทะเบียน");
         hasError = true;
       }
 
       if (hasError) {
-        showToast("กรุณากรอกข้อมูลให้ถูกต้องตามช่องที่มีสัญลักษณ์เตือน", "error");
+        if (!pdpaConsent) {
+          showToast("⚠️ กรุณากดยินยอมนโยบายความเป็นส่วนตัว (PDPA) ก่อนลงทะเบียน", "error");
+          const pdpaBox = document.getElementById("pdpaBox");
+          if (pdpaBox) {
+            pdpaBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else {
+          showToast("กรุณากรอกข้อมูลให้ถูกต้องตามช่องที่มีสัญลักษณ์เตือน", "error");
+        }
         return;
       }
 
