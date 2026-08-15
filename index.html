@@ -631,21 +631,7 @@
 
       <div class="form-wrapper">
 
-        <!-- LINE User Profile Banner (ดึง userId, displayName อัตโนมัติจาก LIFF SDK) -->
-        <div class="profile-badge">
-          <div class="profile-avatar" id="avatarBox">
-            <i class="fa-solid fa-user"></i>
-          </div>
-          <div class="profile-info">
-            <div class="name-label">บัญชี LINE ที่เชื่อมต่อ</div>
-            <div class="name-value" id="profileNameDisplay">กำลังโหลดข้อมูล LINE...</div>
-            <div class="uid-value" id="profileUidDisplay">LINE ID: Loading...</div>
-          </div>
-          <i class="fa-solid fa-circle-check verified-icon" id="verifiedIcon" title="ยืนยันตัวตนแล้ว" style="display: none;"></i>
-          <button type="button" class="btn-line-login" id="btnLineLogin" onclick="triggerLineLogin()" title="เข้าสู่ระบบด้วย LINE">
-            <i class="fa-brands fa-line"></i> เข้าสู่ระบบ
-          </button>
-        </div>
+
 
         <form id="regForm">
           <!-- Hidden Inputs for LINE Credentials -->
@@ -865,25 +851,25 @@
             document.getElementById("lineDisplayName").value = profile.displayName;
             document.getElementById("linePictureUrl").value = profile.pictureUrl || "";
 
-            document.getElementById("profileNameDisplay").textContent = profile.displayName;
-            document.getElementById("profileUidDisplay").textContent = `LINE ID: ${profile.userId.substring(0, 14)}...`;
+            const nameDisp = document.getElementById("profileNameDisplay");
+            if (nameDisp) nameDisp.textContent = profile.displayName;
+            const uidDisp = document.getElementById("profileUidDisplay");
+            if (uidDisp) uidDisp.textContent = `LINE ID: ${profile.userId.substring(0, 14)}...`;
             
             const verifiedIcon = document.getElementById("verifiedIcon");
-            verifiedIcon.style.display = "inline-block";
-            verifiedIcon.style.opacity = "1";
+            if (verifiedIcon) {
+              verifiedIcon.style.display = "inline-block";
+              verifiedIcon.style.opacity = "1";
+            }
 
-            document.getElementById("btnLineLogin").style.display = "none";
+            const btnLogin = document.getElementById("btnLineLogin");
+            if (btnLogin) btnLogin.style.display = "none";
 
             if (profile.pictureUrl) {
               const avatarBox = document.getElementById("avatarBox");
-              avatarBox.innerHTML = `<img src="${profile.pictureUrl}" alt="${profile.displayName}">`;
+              if (avatarBox) avatarBox.innerHTML = `<img src="${profile.pictureUrl}" alt="${profile.displayName}">`;
             }
           } else {
-            // ไม่ได้ยืนยันตัวตนด้วย LINE -> ปรับ UI และแสดงปุ่มเข้าสู่ระบบ LINE
-            document.getElementById("profileNameDisplay").textContent = "ยังไม่ได้เชื่อมต่อ LINE";
-            document.getElementById("profileUidDisplay").textContent = "กรุณากดปุ่มเข้าสู่ระบบด้วย LINE";
-            document.getElementById("btnLineLogin").style.display = "inline-flex";
-
             if (liff.isInClient()) {
               liff.login();
             }
