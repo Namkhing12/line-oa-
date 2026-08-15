@@ -604,6 +604,120 @@
       justify-content: center;
       gap: 8px;
     }
+
+    /* Unhappy Cases & Error State Styling */
+    .form-control.is-invalid {
+      border-color: #EF4444 !important;
+      background-color: #FEF2F2 !important;
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15) !important;
+      animation: shake 0.35s ease-in-out;
+    }
+
+    .pdpa-box.is-invalid {
+      border-color: #EF4444 !important;
+      background-color: #FEF2F2 !important;
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15) !important;
+      animation: shake 0.35s ease-in-out;
+    }
+
+    .error-msg {
+      font-size: 12px;
+      color: #EF4444;
+      margin-top: 5px;
+      display: none;
+      align-items: center;
+      gap: 5px;
+      font-weight: 500;
+    }
+
+    .error-msg.show {
+      display: flex;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    .btn-retry-project {
+      margin-top: 8px;
+      padding: 6px 12px;
+      background: #F1F5F9;
+      color: #0F172A;
+      border: 1px solid #CBD5E1;
+      border-radius: 8px;
+      font-family: 'Kanit', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+    }
+
+    .btn-retry-project:hover {
+      background: #E2E8F0;
+      border-color: #94A3B8;
+    }
+
+    /* Global Error Banner */
+    .alert-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      font-size: 13px;
+      line-height: 1.4;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .alert-banner.show {
+      display: flex;
+    }
+
+    .alert-banner.error {
+      background-color: #FEF2F2;
+      border: 1px solid #FCA5A5;
+      color: #991B1B;
+    }
+
+    .alert-banner.warning {
+      background-color: #FFFBEB;
+      border: 1px solid #FDE68A;
+      color: #92400E;
+    }
+
+    .alert-banner.info {
+      background-color: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      color: #1E40AF;
+    }
+
+    .alert-banner .banner-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .alert-banner .banner-close {
+      background: none;
+      border: none;
+      color: currentColor;
+      opacity: 0.7;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 4px;
+    }
+
+    .alert-banner .banner-close:hover {
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
@@ -631,7 +745,15 @@
 
       <div class="form-wrapper">
 
-
+        <!-- Global Alert Banner for Critical Unhappy Cases -->
+        <div id="globalErrorBanner" class="alert-banner">
+          <div class="banner-content">
+            <i id="bannerIcon" class="fa-solid fa-circle-exclamation"></i>
+            <span id="bannerMessage">เกิดข้อผิดพลาดในการเชื่อมต่อ</span>
+          </div>
+          <div id="bannerAction"></div>
+          <button type="button" class="banner-close" onclick="hideGlobalBanner()" title="ปิด"><i class="fa-solid fa-xmark"></i></button>
+        </div>
 
         <form id="regForm">
           <!-- Hidden Inputs for LINE Credentials -->
@@ -648,6 +770,7 @@
               <input type="text" id="fullName" class="form-control" required placeholder="">
               <i class="fa-solid fa-user input-icon"></i>
             </div>
+            <div class="error-msg" id="fullNameError"><i class="fa-solid fa-circle-exclamation"></i> <span>กรุณากรอกชื่อ-นามสกุลให้ถูกต้อง</span></div>
           </div>
 
           <!-- Phone (เบอร์โทรศัพท์) -->
@@ -659,6 +782,7 @@
               <input type="tel" id="phone" class="form-control" required placeholder="" maxlength="12">
               <i class="fa-solid fa-phone input-icon"></i>
             </div>
+            <div class="error-msg" id="phoneError"><i class="fa-solid fa-circle-exclamation"></i> <span>เบอร์โทรศัพท์ต้องมี 10 หลัก ขึ้นต้นด้วย 0</span></div>
           </div>
 
           <!-- Email (อีเมล) -->
@@ -670,6 +794,7 @@
               <input type="email" id="email" class="form-control" required placeholder="">
               <i class="fa-solid fa-envelope input-icon"></i>
             </div>
+            <div class="error-msg" id="emailError"><i class="fa-solid fa-circle-exclamation"></i> <span>กรุณากรอกรูปแบบอีเมลให้ถูกต้อง (เช่น name@example.com)</span></div>
           </div>
 
           <!-- Company (ชื่อบริษัท / ร้านค้า) -->
@@ -695,10 +820,11 @@
               <i class="fa-solid fa-folder-tree input-icon"></i>
               <i class="fa-solid fa-chevron-down select-arrow"></i>
             </div>
+            <div id="projectRetryBox"></div>
           </div>
 
           <!-- PDPA Consent Checkbox -->
-          <div class="pdpa-box">
+          <div class="pdpa-box" id="pdpaBox">
             <label class="checkbox-container">
               <input type="checkbox" id="pdpaConsent" required>
               <span class="checkmark"></span>
@@ -707,6 +833,7 @@
                 <span class="pdpa-link" onclick="togglePdpaModal(true)">นโยบายความเป็นส่วนตัว (PDPA)</span>
               </span>
             </label>
+            <div class="error-msg" id="pdpaError" style="margin-top: 8px;"><i class="fa-solid fa-circle-exclamation"></i> <span>กรุณายินยอมนโยบาย PDPA ก่อนลงทะเบียน</span></div>
           </div>
 
           <!-- Submit Button -->
@@ -779,14 +906,19 @@
       LIFF_ID: "2010806104-99Q0WLbQ", // LINE LIFF App ID
       LIFF_URL: "https://liff.line.me/2010806104-99Q0WLbQ",
       N8N_GET_PROJECTS_URL: "https://n8n.arterypartner.dev/webhook/get-active-projects",
-      N8N_REGISTER_URL: "https://n8n.arterypartner.dev/webhook/line-register"
+      N8N_REGISTER_URL: "https://n8n.arterypartner.dev/webhook/line-register",
+      API_TIMEOUT_MS: 15000 // 15 seconds request timeout limit
     };
+
+    let isSubmitting = false;
 
     // Toast Notification helper
     function showToast(message, type = 'info') {
       const toast = document.getElementById('toast');
       const toastMsg = document.getElementById('toastMessage');
       const toastIcon = document.getElementById('toastIcon');
+
+      if (!toast || !toastMsg || !toastIcon) return;
 
       toastMsg.textContent = message;
       toast.className = `toast ${type} show`;
@@ -801,7 +933,67 @@
 
       setTimeout(() => {
         toast.classList.remove('show');
-      }, 3500);
+      }, 4000);
+    }
+
+    // Global Alert Banner Helper
+    function showGlobalBanner(message, type = 'error', actionHtml = '') {
+      const banner = document.getElementById('globalErrorBanner');
+      const bannerMsg = document.getElementById('bannerMessage');
+      const bannerIcon = document.getElementById('bannerIcon');
+      const bannerAction = document.getElementById('bannerAction');
+
+      if (!banner || !bannerMsg) return;
+
+      bannerMsg.textContent = message;
+      banner.className = `alert-banner ${type} show`;
+      
+      if (type === 'error') {
+        bannerIcon.className = 'fa-solid fa-circle-exclamation';
+      } else if (type === 'warning') {
+        bannerIcon.className = 'fa-solid fa-triangle-exclamation';
+      } else {
+        bannerIcon.className = 'fa-solid fa-circle-info';
+      }
+
+      if (bannerAction) {
+        bannerAction.innerHTML = actionHtml;
+      }
+    }
+
+    function hideGlobalBanner() {
+      const banner = document.getElementById('globalErrorBanner');
+      if (banner) banner.classList.remove('show');
+    }
+
+    // Network Status Monitoring (Unhappy Case: Offline/Online transition)
+    window.addEventListener('online', () => {
+      showToast("เชื่อมต่ออินเทอร์เน็ตเรียบร้อยแล้ว", "success");
+      hideGlobalBanner();
+    });
+
+    window.addEventListener('offline', () => {
+      showToast("ไม่มีการเชื่อมต่ออินเทอร์เน็ต โปรดตรวจสอบการเชื่อมต่อของคุณ", "error");
+      showGlobalBanner("ไม่มีการเชื่อมต่ออินเทอร์เน็ต โปรดตรวจสอบสัญญาณ Wi-Fi หรือ Cellular ของคุณ", "error");
+    });
+
+    // Helper: Fetch with Timeout (Unhappy Case: Network hanging / API timeout)
+    async function fetchWithTimeout(url, options = {}) {
+      const { timeout = CONFIG.API_TIMEOUT_MS } = options;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+      try {
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        return response;
+      } catch (err) {
+        clearTimeout(timeoutId);
+        throw err;
+      }
     }
 
     // Modal Helper
@@ -816,18 +1008,20 @@
 
     // Phone Auto-Format (081-234-5678)
     const phoneInput = document.getElementById("phone");
-    phoneInput.addEventListener("input", (e) => {
-      let val = e.target.value.replace(/\D/g, "");
-      if (val.length > 10) val = val.substring(0, 10);
-      
-      if (val.length > 6) {
-        e.target.value = `${val.substring(0, 3)}-${val.substring(3, 6)}-${val.substring(6)}`;
-      } else if (val.length > 3) {
-        e.target.value = `${val.substring(0, 3)}-${val.substring(3)}`;
-      } else {
-        e.target.value = val;
-      }
-    });
+    if (phoneInput) {
+      phoneInput.addEventListener("input", (e) => {
+        let val = e.target.value.replace(/\D/g, "");
+        if (val.length > 10) val = val.substring(0, 10);
+        
+        if (val.length > 6) {
+          e.target.value = `${val.substring(0, 3)}-${val.substring(3, 6)}-${val.substring(6)}`;
+        } else if (val.length > 3) {
+          e.target.value = `${val.substring(0, 3)}-${val.substring(3)}`;
+        } else {
+          e.target.value = val;
+        }
+      });
+    }
 
     // Trigger LINE Login explicitly
     function triggerLineLogin() {
@@ -840,6 +1034,11 @@
 
     // Main Initialization
     async function main() {
+      // Unhappy Case check: Connection offline on launch
+      if (!navigator.onLine) {
+        showGlobalBanner("ไม่มีการเชื่อมต่ออินเทอร์เน็ต โปรดตรวจสอบการเชื่อมต่อของคุณ", "error");
+      }
+
       try {
         if (CONFIG.LIFF_ID) {
           await liff.init({ 
@@ -848,43 +1047,51 @@
           });
 
           if (liff.isLoggedIn()) {
-            const profile = await liff.getProfile();
-            
-            document.getElementById("lineUserId").value = profile.userId;
-            document.getElementById("lineDisplayName").value = profile.displayName;
-            document.getElementById("linePictureUrl").value = profile.pictureUrl || "";
-
-            // Auto-fill Email from Decoded ID Token if available
             try {
-              const decodedToken = liff.getDecodedIDToken();
-              if (decodedToken && decodedToken.email) {
-                const emailInput = document.getElementById("email");
-                if (emailInput) {
-                  emailInput.value = decodedToken.email;
-                  emailInput.readOnly = true;
+              const profile = await liff.getProfile();
+              
+              document.getElementById("lineUserId").value = profile.userId;
+              document.getElementById("lineDisplayName").value = profile.displayName;
+              document.getElementById("linePictureUrl").value = profile.pictureUrl || "";
+
+              // Auto-fill Email from Decoded ID Token if available
+              try {
+                const decodedToken = liff.getDecodedIDToken();
+                if (decodedToken && decodedToken.email) {
+                  const emailInput = document.getElementById("email");
+                  if (emailInput) {
+                    emailInput.value = decodedToken.email;
+                    emailInput.readOnly = true;
+                  }
                 }
+              } catch (tokenErr) {
+                console.warn("Could not retrieve decoded ID token email:", tokenErr);
               }
-            } catch (tokenErr) {
-              console.warn("Could not retrieve decoded ID token email:", tokenErr);
-            }
 
-            const nameDisp = document.getElementById("profileNameDisplay");
-            if (nameDisp) nameDisp.textContent = profile.displayName;
-            const uidDisp = document.getElementById("profileUidDisplay");
-            if (uidDisp) uidDisp.textContent = `LINE ID: ${profile.userId.substring(0, 14)}...`;
-            
-            const verifiedIcon = document.getElementById("verifiedIcon");
-            if (verifiedIcon) {
-              verifiedIcon.style.display = "inline-block";
-              verifiedIcon.style.opacity = "1";
-            }
+              const nameDisp = document.getElementById("profileNameDisplay");
+              if (nameDisp) nameDisp.textContent = profile.displayName;
+              const uidDisp = document.getElementById("profileUidDisplay");
+              if (uidDisp) uidDisp.textContent = `LINE ID: ${profile.userId.substring(0, 14)}...`;
+              
+              const verifiedIcon = document.getElementById("verifiedIcon");
+              if (verifiedIcon) {
+                verifiedIcon.style.display = "inline-block";
+                verifiedIcon.style.opacity = "1";
+              }
 
-            const btnLogin = document.getElementById("btnLineLogin");
-            if (btnLogin) btnLogin.style.display = "none";
+              const btnLogin = document.getElementById("btnLineLogin");
+              if (btnLogin) btnLogin.style.display = "none";
 
-            if (profile.pictureUrl) {
-              const avatarBox = document.getElementById("avatarBox");
-              if (avatarBox) avatarBox.innerHTML = `<img src="${profile.pictureUrl}" alt="${profile.displayName}">`;
+              if (profile.pictureUrl) {
+                const avatarBox = document.getElementById("avatarBox");
+                if (avatarBox) avatarBox.innerHTML = `<img src="${profile.pictureUrl}" alt="${profile.displayName}">`;
+              }
+              
+              hideGlobalBanner();
+            } catch (profErr) {
+              console.error("LIFF Get Profile Error:", profErr);
+              showToast("ไม่สามารถดึงข้อมูลโปรไฟล์ LINE ได้ กรุณาลองเข้าสู่ระบบอีกครั้ง", "error");
+              showGlobalBanner("ไม่สามารถระบุตัวตน LINE Account ได้ กรุณากดปุ่มเพื่อเข้าสู่ระบบอีกครั้ง", "warning", `<button type="button" class="btn-line-login" onclick="triggerLineLogin()"><i class="fa-brands fa-line"></i> เข้าสู่ระบบ LINE</button>`);
             }
           } else {
             if (liff.isInClient()) {
@@ -894,7 +1101,8 @@
         }
       } catch (err) {
         console.error("LIFF Initialization Error:", err);
-        showToast("LIFF Init Error (400): โปรดตรวจสอบ LIFF ID และ Endpoint URL ใน LINE Console", "error");
+        showToast("LIFF Init Error: โปรดตรวจสอบ LIFF ID และ Endpoint URL ใน LINE Console", "error");
+        showGlobalBanner("เกิดข้อผิดพลาดในการเริ่มต้น LINE LIFF (400 Bad Request) กรุณาตรวจสอบการตั้งค่า", "error");
       }
 
       // ดึง list โครงการเฉพาะที่ status = Active จาก n8n
@@ -904,12 +1112,15 @@
     // Fetch Active Projects from n8n Webhook (เฉพาะที่ status = Active)
     async function loadActiveProjects() {
       const select = document.getElementById("projectCode");
+      const retryBox = document.getElementById("projectRetryBox");
+      if (retryBox) retryBox.innerHTML = "";
+
       try {
-        const res = await fetch(CONFIG.N8N_GET_PROJECTS_URL);
+        const res = await fetchWithTimeout(CONFIG.N8N_GET_PROJECTS_URL, { timeout: 10000 });
         if (!res.ok) throw new Error("HTTP Status " + res.status);
         
         const responseData = await res.json();
-        select.innerHTML = '<option value="">-- กรุณาเลือกโครงการ / บริการ --</option>';
+        select.innerHTML = '<option value="">-- ไม่ระบุ / เลือกโครงการ (ถ้ามี) --</option>';
         
         // Extract array from responseData (handles [], { data: [] }, { result: [] }, { projects: [] })
         let projectList = [];
@@ -944,35 +1155,125 @@
       } catch (err) {
         console.error("Unable to load projects from n8n backend:", err);
         select.innerHTML = '<option value="">❌ เกิดข้อผิดพลาดในการโหลดรายการโครงการ</option>';
-        showToast("ไม่สามารถโหลดรายการโครงการได้ โปรดตรวจสอบการเชื่อมต่อ n8n", "error");
+        if (retryBox) {
+          retryBox.innerHTML = `<button type="button" class="btn-retry-project" onclick="loadActiveProjects()"><i class="fa-solid fa-rotate-right"></i> ลองโหลดรายการโครงการอีกครั้ง</button>`;
+        }
       }
+    }
+
+    // Helper: Reset Field Validation Error UI
+    function clearValidationErrors() {
+      const inputs = document.querySelectorAll('.form-control, .pdpa-box');
+      inputs.forEach(el => el.classList.remove('is-invalid'));
+      const errorMsgs = document.querySelectorAll('.error-msg');
+      errorMsgs.forEach(el => el.classList.remove('show'));
+    }
+
+    // Helper: Remove Field Specific Error State
+    function removeFieldError(fieldId, errorMsgId) {
+      const field = document.getElementById(fieldId);
+      const errorEl = document.getElementById(errorMsgId);
+      if (field) field.classList.remove('is-invalid');
+      if (errorEl) errorEl.classList.remove('show');
+    }
+
+    // Helper: Show Specific Field Error
+    function showFieldError(fieldId, errorMsgId, customMessage) {
+      const field = document.getElementById(fieldId);
+      const errorEl = document.getElementById(errorMsgId);
+      if (field) field.classList.add('is-invalid');
+      if (errorEl) {
+        if (customMessage) {
+          const span = errorEl.querySelector('span');
+          if (span) span.textContent = customMessage;
+        }
+        errorEl.classList.add('show');
+      }
+    }
+
+    // Attach Real-time Error Clearing Event Listeners
+    ['fullName', 'phone', 'email'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', () => removeFieldError(id, `${id}Error`));
+      }
+    });
+    const pdpaElem = document.getElementById('pdpaConsent');
+    if (pdpaElem) {
+      pdpaElem.addEventListener('change', () => removeFieldError('pdpaBox', 'pdpaError'));
     }
 
     // Submit Registration Form
     document.getElementById("regForm").addEventListener("submit", async (e) => {
       e.preventDefault();
+      
+      // Unhappy Case: Prevent double submit while in-flight
+      if (isSubmitting) return;
+
+      clearValidationErrors();
+      hideGlobalBanner();
+
       const submitBtn = document.getElementById("submitBtn");
       const btnText = document.getElementById("btnText");
       const btnIcon = document.getElementById("btnIcon");
 
-      // Validation for Phone
-      const rawPhone = document.getElementById("phone").value.replace(/\D/g, "");
-      if (!/^0[0-9]{9}$/.test(rawPhone)) {
-        showToast("กรุณากรอกเบอร์โทรศัพท์ 10 หลักขึ้นต้นด้วย 0", "error");
+      // Unhappy Case 1: Check Internet Connection Offline
+      if (!navigator.onLine) {
+        showToast("ไม่มีการเชื่อมต่ออินเทอร์เน็ต โปรดตรวจสอบการเชื่อมต่อของคุณ", "error");
+        showGlobalBanner("ไม่มีการเชื่อมต่ออินเทอร์เน็ต โปรดตรวจสอบสัญญาณของคุณแล้วลองอีกครั้ง", "error");
         return;
       }
 
-      // Determine LINE User ID (ต้องมีค่าจาก LINE Profile จริงเท่านั้น)
+      let hasError = false;
+
+      // Unhappy Case 2: Validate Full Name
+      const fullName = document.getElementById("fullName").value.trim();
+      if (!fullName || fullName.length < 2) {
+        showFieldError("fullName", "fullNameError", "กรุณากรอกชื่อ-นามสกุลจริงอย่างน้อย 2 ตัวอักษร");
+        hasError = true;
+      }
+
+      // Unhappy Case 3: Validate Phone Format & Dummy Numbers
+      const rawPhone = document.getElementById("phone").value.replace(/\D/g, "");
+      const dummyPhones = ["0000000000", "0123456789", "0999999999", "0888888888", "0111111111"];
+      if (!/^0[6892357]\d{8}$/.test(rawPhone) || dummyPhones.includes(rawPhone)) {
+        showFieldError("phone", "phoneError", "กรุณากรอกเบอร์โทรศัพท์มือถือที่ถูกต้อง 10 หลัก (เช่น 0812345678)");
+        hasError = true;
+      }
+
+      // Unhappy Case 4: Validate Email Format
+      const emailVal = document.getElementById("email").value.trim();
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(emailVal)) {
+        showFieldError("email", "emailError", "กรุณากรอกรูปแบบอีเมลให้ถูกต้อง (เช่น name@example.com)");
+        hasError = true;
+      }
+
+      // Unhappy Case 5: Validate PDPA Consent Checkbox
+      const pdpaConsent = document.getElementById("pdpaConsent").checked;
+      if (!pdpaConsent) {
+        showFieldError("pdpaBox", "pdpaError", "กรุณากดยินยอมนโยบาย PDPA ก่อนทำการลงทะเบียน");
+        hasError = true;
+      }
+
+      if (hasError) {
+        showToast("กรุณากรอกข้อมูลให้ถูกต้องตามช่องที่มีสัญลักษณ์เตือน", "error");
+        return;
+      }
+
+      // Unhappy Case 6: Determine LINE User ID (ต้องมีค่าจาก LINE Profile)
       let lineUserId = document.getElementById("lineUserId").value;
       if (!lineUserId) {
         showToast("กรุณาเข้าสู่ระบบ LINE ก่อนทำการลงทะเบียน", "error");
+        showGlobalBanner("ไม่พบข้อมูล LINE Account กรุณากดปุ่มเพื่อเข้าสู่ระบบ LINE", "warning", `<button type="button" class="btn-line-login" onclick="triggerLineLogin()"><i class="fa-brands fa-line"></i> เข้าสู่ระบบ LINE</button>`);
         triggerLineLogin();
         return;
       }
 
-      let lineDisplayName = document.getElementById("lineDisplayName").value || document.getElementById("fullName").value;
+      let lineDisplayName = document.getElementById("lineDisplayName").value || fullName;
 
-      // UI Loading State
+      // Set In-Flight & UI Loading State
+      isSubmitting = true;
       submitBtn.disabled = true;
       btnText.textContent = "กำลังลงทะเบียน...";
       btnIcon.className = "spinner";
@@ -982,24 +1283,32 @@
         line_user_id: lineUserId,
         line_display_name: lineDisplayName,
         line_picture_url: document.getElementById("linePictureUrl").value,
-        full_name: document.getElementById("fullName").value,
+        full_name: document.getElementById("fullName").value.trim(),
         phone: rawPhone,
-        email: document.getElementById("email").value,
-        company: document.getElementById("company").value,
+        email: emailVal,
+        company: document.getElementById("company").value.trim(),
         project: document.getElementById("projectCode").value,
         project_code: document.getElementById("projectCode").value,
-        pdpa_consent: document.getElementById("pdpaConsent").checked,
+        pdpa_consent: pdpaConsent,
         pdpa_consent_datetime: nowIso,
         platform: (typeof liff !== "undefined" && liff.isInClient && liff.isInClient()) ? "MOBILE_LIFF" : "DESKTOP_WEB",
         registered_at: nowIso
       };
 
       try {
-        const response = await fetch(CONFIG.N8N_REGISTER_URL, {
+        const response = await fetchWithTimeout(CONFIG.N8N_REGISTER_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          timeout: CONFIG.API_TIMEOUT_MS
         });
+
+        let resJson = null;
+        try {
+          resJson = await response.json();
+        } catch (e) {
+          // Response body is not JSON or empty
+        }
 
         if (response.ok) {
           showToast("ลงทะเบียนสำเร็จเรียบร้อย!", "success");
@@ -1020,12 +1329,40 @@
             document.getElementById("successView").style.display = "block";
           }, 500);
         } else {
-          showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูล", "error");
+          // Unhappy Path: Handle HTTP Status Codes & Error Messages from Backend API
+          let serverErrMsg = "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
+          
+          if (resJson && (resJson.message || resJson.error || resJson.detail)) {
+            serverErrMsg = resJson.message || resJson.error || resJson.detail;
+          } else if (response.status === 409) {
+            serverErrMsg = "บัญชี LINE หรือเบอร์โทรศัพท์นี้ได้ลงทะเบียนไว้ในระบบแล้ว";
+          } else if (response.status === 429) {
+            serverErrMsg = "มีการทำรายการถี่เกินไป กรุณารอสักครู่แล้วลองใหม่อีกครั้ง";
+          } else if (response.status === 400) {
+            serverErrMsg = "ข้อมูลที่ส่งไปไม่ถูกต้อง กรุณาตรวจสอบข้อมูลอีกครั้ง";
+          } else if (response.status >= 500) {
+            serverErrMsg = `ระบบเซิร์ฟเวอร์ขัดข้องชั่วคราว (HTTP ${response.status}) กรุณาลองใหม่อีกครั้ง`;
+          }
+
+          showToast(serverErrMsg, "error");
+          showGlobalBanner(`เกิดข้อผิดพลาด: ${serverErrMsg}`, "error");
         }
       } catch (err) {
         console.error("Submission error:", err);
-        showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", "error");
+
+        // Unhappy Cases: Network errors / Timeout / Abort
+        if (err.name === 'AbortError') {
+          showToast("การเชื่อมต่อหมดเวลา (Timeout) กรุณาลองใหม่อีกครั้ง", "error");
+          showGlobalBanner("ระบบใช้เวลานานเกินไปในการตอบสนอง (Connection Timeout) กรุณาลองส่งใหม่อีกครั้ง", "warning");
+        } else if (!navigator.onLine) {
+          showToast("ไม่มีการเชื่อมต่ออินเทอร์เน็ต โปรดตรวจสอบการเชื่อมต่อของคุณ", "error");
+          showGlobalBanner("ไม่มีการเชื่อมต่ออินเทอร์เน็ต โปรดตรวจสอบสัญญาณของคุณ", "error");
+        } else {
+          showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง", "error");
+          showGlobalBanner("ไม่สามารถติดต่อเซิร์ฟเวอร์ n8n backend ได้ กรุณาตรวจสอบอินเทอร์เน็ตหรือลองใหม่อีกครั้ง", "error");
+        }
       } finally {
+        isSubmitting = false;
         submitBtn.disabled = false;
         btnText.textContent = "ยืนยันการลงทะเบียน";
         btnIcon.className = "fa-solid fa-paper-plane";
