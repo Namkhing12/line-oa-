@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ลงทะเบียนสมาชิก LINE OA</title>
+  <!-- Google Fonts: Kanit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- LINE LIFF SDK -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <style>
+    :root {
+      --line-green: #06C755;
+      --line-green-hover: #05b34c;
+      --line-green-dark: #00A040;
+      --line-green-light: #E8F9EE;
+      --bg-gradient: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+      --card-bg: #FFFFFF;
+      --text-main: #0F172A;
+      --text-muted: #64748B;
+      --border-color: #CBD5E1;
+      --border-focus: #06C755;
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 20px 35px -5px rgba(0, 0, 0, 0.25), 0 10px 15px -6px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 20px 30px -10px rgba(6, 199, 85, 0.25);
+      --radius: 20px;
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Kanit', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 16px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Vertical Card Container */
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      position: relative;
+      animation: fadeIn 0.4s ease-out;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header Banner */
+    .header {
+      background: linear-gradient(135deg, #06C755 0%, #00B900 100%);
+      color: white;
+      padding: 32px 24px 36px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 0;
+      right: 0;
+      height: 30px;
+      background: var(--card-bg);
+      border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    }
+
+    .header-logo {
+      width: 60px;
+      height: 60px;
+      background: white;
+      color: var(--line-green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 14px auto;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+    }
+
+    .header h1 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      letter-spacing: -0.3px;
+    }
+
+    .header p {
+      font-size: 13.5px;
+      opacity: 0.92;
+      font-weight: 300;
+    }
+
+    /* Form Area Wrapper */
+    .form-wrapper {
+      padding: 16px 24px 32px 24px;
+    }
+
+    /* User Profile Badge Bar */
+    .profile-badge {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--line-green-light);
+      border: 1px solid rgba(6, 199, 85, 0.25);
+      padding: 12px 16px;
+      border-radius: 14px;
+      margin-bottom: 22px;
+    }
+
+    .profile-avatar {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      background: #CBD5E1;
+      object-fit: cover;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-info {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .profile-info .name-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 500;
+    }
+
+    .profile-info .name-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .profile-info .uid-value {
+      font-size: 11px;
+      color: #64748B;
+      font-family: monospace;
+    }
+
+    .verified-icon {
+      color: var(--line-green);
+      font-size: 18px;
+    }
+
+    .btn-line-login {
+      padding: 6px 12px;
+      background: var(--line-green);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Kanit', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+    }
+
+    .btn-line-login:hover {
+      background: var(--line-green-hover);
+    }
+
+    /* Form Inputs */
+    .form-group {
+      margin-bottom: 18px;
+      position: relative;
+    }
+
+    .form-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-main);
+      margin-bottom: 6px;
+    }
+
+    .form-label .required {
+      color: #EF4444;
+      font-weight: 700;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      color: #94A3B8;
+      font-size: 15px;
+      transition: var(--transition);
+      pointer-events: none;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 14px 12px 42px;
+      font-family: 'Kanit', sans-serif;
+      font-size: 14px;
+      color: var(--text-main);
+      background-color: #F8FAFC;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      outline: none;
+      transition: var(--transition);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .form-control:focus {
+      background-color: #FFFFFF;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 4px rgba(6, 199, 85, 0.14);
+    }
+
+    .form-control:focus + .input-icon,
+    .form-control:not(:placeholder-shown) + .input-icon {
+      color: var(--line-green);
+    }
+
+    select.form-control {
+      cursor: pointer;
+      padding-right: 36px;
+    }
+
+    .select-arrow {
+      position: absolute;
+      right: 14px;
+      color: #94A3B8;
+      font-size: 12px;
+      pointer-events: none;
+    }
+
+    /* PDPA Consent Box */
+    .pdpa-box {
+      background: #F8FAFC;
+      border: 1.5px solid var(--border-color);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 22px;
+      transition: var(--transition);
+    }
+
+    .pdpa-box:hover {
+      border-color: #CBD5E1;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-container input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+    }
+
+    .checkmark {
+      width: 20px;
+      height: 20px;
+      background-color: #FFFFFF;
+      border: 2px solid #CBD5E1;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .checkbox-container input:checked ~ .checkmark {
+      background-color: var(--line-green);
+      border-color: var(--line-green);
+    }
+
+    .checkmark::after {
+      content: "\f00c";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      color: white;
+      font-size: 11px;
+      display: none;
+    }
+
+    .checkbox-container input:checked ~ .checkmark::after {
+      display: block;
+    }
+
+    .pdpa-text {
+      font-size: 12.5px;
+      color: #475569;
+      line-height: 1.45;
+    }
+
+    .pdpa-link {
+      color: var(--line-green-dark);
+      text-decoration: underline;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    /* Submit Button */
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #06C755 0%, #00B900 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Kanit', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-lg);
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 35px -10px rgba(6, 199, 85, 0.35);
+    }
+
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      background: #CBD5E1;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* PDPA Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: var(--transition);
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      background: white;
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 440px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      transform: scale(0.95);
+      transition: var(--transition);
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: scale(1);
+    }
+
+    .modal-header {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      font-size: 16px;
+      color: var(--text-main);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.6;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border-color);
+      text-align: right;
+    }
+
+    .btn-secondary {
+      padding: 10px 20px;
+      background: #F1F5F9;
+      color: #475569;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Kanit', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      width: 90%;
+      max-width: 400px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: #1E293B;
+      color: white;
+      padding: 14px 18px;
+      border-radius: 14px;
+      box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: var(--transition);
+      pointer-events: auto;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.success { background: #06C755; }
+    .toast.error { background: #EF4444; }
+
+    /* Success Screen */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 36px 24px;
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .success-icon-wrap {
+      width: 76px;
+      height: 76px;
+      background: var(--line-green-light);
+      color: var(--line-green);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      margin: 0 auto 18px auto;
+    }
+
+    .success-screen h2 {
+      font-size: 22px;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    .success-screen p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .receipt-box {
+      background: #F8FAFC;
+      border: 1px dashed var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: left;
+      margin-bottom: 24px;
+      font-size: 13px;
+    }
+
+    .receipt-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: #475569;
+    }
+
+    .receipt-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .receipt-row .val {
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    .btn-close-liff {
+      width: 100%;
+      padding: 14px;
+      background: #1E293B;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Kanit', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container">
+    <div id="toast" class="toast">
+      <i id="toastIcon" class="fa-solid fa-circle-info"></i>
+      <span id="toastMessage">ข้อความแจ้งเตือน</span>
+    </div>
+  </div>
+
+  <!-- Vertical Card Container -->
+  <div class="app-container">
+    
+    <!-- Registration Form View -->
+    <div id="formView">
+      <div class="header">
+        <div class="header-logo">
+          <i class="fa-brands fa-line"></i>
+        </div>
+        <h1>ลงทะเบียนสมาชิก LINE OA</h1>
+        <p>กรอกข้อมูลเพื่อเปิดใช้งานและรับสิทธิประโยชน์</p>
+      </div>
+
+      <div class="form-wrapper">
+
+        <!-- LINE User Profile Banner (ดึง userId, displayName อัตโนมัติจาก LIFF SDK) -->
+        <div class="profile-badge">
+          <div class="profile-avatar" id="avatarBox">
+            <i class="fa-solid fa-user"></i>
+          </div>
+          <div class="profile-info">
+            <div class="name-label">บัญชี LINE ที่เชื่อมต่อ</div>
+            <div class="name-value" id="profileNameDisplay">กำลังโหลดข้อมูล LINE...</div>
+            <div class="uid-value" id="profileUidDisplay">LINE ID: Loading...</div>
+          </div>
+          <i class="fa-solid fa-circle-check verified-icon" id="verifiedIcon" title="ยืนยันตัวตนแล้ว" style="display: none;"></i>
+          <button type="button" class="btn-line-login" id="btnLineLogin" onclick="triggerLineLogin()" title="เข้าสู่ระบบด้วย LINE">
+            <i class="fa-brands fa-line"></i> เข้าสู่ระบบ
+          </button>
+        </div>
+
+        <form id="regForm">
+          <!-- Hidden Inputs for LINE Credentials -->
+          <input type="hidden" id="lineUserId" value="">
+          <input type="hidden" id="lineDisplayName" value="">
+          <input type="hidden" id="linePictureUrl" value="">
+
+          <!-- Name (ชื่อ-นามสกุล) -->
+          <div class="form-group">
+            <label class="form-label" for="fullName">
+              <i class="fa-regular fa-id-card"></i> ชื่อ-นามสกุล <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <input type="text" id="fullName" class="form-control" required placeholder="">
+              <i class="fa-solid fa-user input-icon"></i>
+            </div>
+          </div>
+
+          <!-- Phone (เบอร์โทรศัพท์) -->
+          <div class="form-group">
+            <label class="form-label" for="phone">
+              <i class="fa-solid fa-mobile-screen-button"></i> เบอร์โทรศัพท์ <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <input type="tel" id="phone" class="form-control" required placeholder="" maxlength="12">
+              <i class="fa-solid fa-phone input-icon"></i>
+            </div>
+          </div>
+
+          <!-- Email (อีเมล) -->
+          <div class="form-group">
+            <label class="form-label" for="email">
+              <i class="fa-regular fa-envelope"></i> อีเมล <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <input type="email" id="email" class="form-control" required placeholder="">
+              <i class="fa-solid fa-envelope input-icon"></i>
+            </div>
+          </div>
+
+          <!-- Company (ชื่อบริษัท / ร้านค้า) -->
+          <div class="form-group">
+            <label class="form-label" for="company">
+              <i class="fa-regular fa-building"></i> บริษัท / องค์กร (ถ้ามี)
+            </label>
+            <div class="input-wrapper">
+              <input type="text" id="company" class="form-control" placeholder="">
+              <i class="fa-solid fa-building input-icon"></i>
+            </div>
+          </div>
+
+          <!-- Dropdown เลือกรหัส LineOA Project (ดึง list จาก n8n เฉพาะที่ status = Active) -->
+          <div class="form-group">
+            <label class="form-label" for="projectCode">
+              <i class="fa-solid fa-diagram-project"></i> โครงการ / ช่องทางบริการ (LineOA Project) <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <select id="projectCode" class="form-control" required>
+                <option value="">-- กำลังโหลดรายการโครงการ (Active)... --</option>
+              </select>
+              <i class="fa-solid fa-folder-tree input-icon"></i>
+              <i class="fa-solid fa-chevron-down select-arrow"></i>
+            </div>
+          </div>
+
+          <!-- PDPA Consent Checkbox -->
+          <div class="pdpa-box">
+            <label class="checkbox-container">
+              <input type="checkbox" id="pdpaConsent" required>
+              <span class="checkmark"></span>
+              <span class="pdpa-text">
+                ฉันยินยอมให้จัดเก็บและใช้ข้อมูลส่วนบุคคลตาม
+                <span class="pdpa-link" onclick="togglePdpaModal(true)">นโยบายความเป็นส่วนตัว (PDPA)</span>
+              </span>
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="submitBtn" class="btn-submit">
+            <span id="btnText">ยืนยันการลงทะเบียน</span>
+            <i class="fa-solid fa-paper-plane" id="btnIcon"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Success Receipt View -->
+    <div id="successView" class="success-screen">
+      <div class="success-icon-wrap">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <h2>ลงทะเบียนสำเร็จ!</h2>
+      <p>ข้อมูลของคุณได้รับการบันทึกในระบบเรียบร้อยแล้ว</p>
+
+      <div class="receipt-box">
+        <div class="receipt-row">
+          <span>ชื่อ-นามสกุล:</span>
+          <span class="val" id="recFullName">-</span>
+        </div>
+        <div class="receipt-row">
+          <span>เบอร์โทรศัพท์:</span>
+          <span class="val" id="recPhone">-</span>
+        </div>
+        <div class="receipt-row">
+          <span>โครงการ:</span>
+          <span class="val" id="recProject">-</span>
+        </div>
+        <div class="receipt-row">
+          <span>วันที่ลงทะเบียน:</span>
+          <span class="val" id="recDate">-</span>
+        </div>
+      </div>
+
+      <button class="btn-close-liff" onclick="closeLiffWindow()">
+        <i class="fa-solid fa-comment"></i> กลับสู่แชท LINE
+      </button>
+    </div>
+
+  </div>
+
+  <!-- PDPA Policy Modal Drawer -->
+  <div class="modal-overlay" id="pdpaModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-shield-halved" style="color: var(--line-green);"></i> ข้อกำหนด และ นโยบาย PDPA</h3>
+        <button class="modal-close" onclick="togglePdpaModal(false)"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>ข้อกำหนดการคุ้มครองข้อมูลส่วนบุคคล (PDPA Privacy Policy)</strong></p><br>
+        <p>1. <strong>วัตถุประสงค์การจัดเก็บ:</strong> ทางบริษัทจัดเก็บข้อมูลส่วนบุคคล ได้แก่ ชื่อ-นามสกุล, เบอร์โทรศัพท์, อีเมล, ข้อมูล LINE ID และชื่อองค์กร เพื่อใช้ในการยืนยันตัวตน ให้บริการ และส่งข่าวสารสิทธิประโยชน์ผ่านช่องทาง LINE OA</p><br>
+        <p>2. <strong>ระยะเวลาการจัดเก็บ:</strong> ข้อมูลจะถูกเก็บรักษาไว้อย่างปลอดภัยตามมาตรการรักษาความปลอดภัยข้อมูล และจะถูกเก็บเท่าที่จำเป็นตามวัตถุประสงค์ในการให้บริการ</p><br>
+        <p>3. <strong>สิทธิ์ของผู้ให้ข้อมูล:</strong> ท่านสามารถขอเข้าถึง แก้ไข ปรับปรุง หรือขอให้ลบข้อมูลส่วนบุคคลของท่านได้โดยติดต่อแอดมินผ่านช่องทาง LINE Official Account</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary" onclick="togglePdpaModal(false)">รับทราบและปิดหน้าต่าง</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =======================================================================
+    // PRODUCTION CONFIGURATION
+    // =======================================================================
+    const CONFIG = {
+      LIFF_ID: "2010806104-mJz5dgfg", // LINE LIFF App ID
+      LIFF_URL: "https://liff.line.me/2010806104-mJz5dgfg",
+      N8N_GET_PROJECTS_URL: "https://n8n.arterypartner.dev/webhook/get-active-projects",
+      N8N_REGISTER_URL: "https://n8n.arterypartner.dev/webhook/line-register"
+    };
+
+    // Toast Notification helper
+    function showToast(message, type = 'info') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMsg.textContent = message;
+      toast.className = `toast ${type} show`;
+
+      if (type === 'success') {
+        toastIcon.className = 'fa-solid fa-circle-check';
+      } else if (type === 'error') {
+        toastIcon.className = 'fa-solid fa-circle-exclamation';
+      } else {
+        toastIcon.className = 'fa-solid fa-circle-info';
+      }
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3500);
+    }
+
+    // Modal Helper
+    function togglePdpaModal(show) {
+      const modal = document.getElementById('pdpaModal');
+      if (show) {
+        modal.classList.add('active');
+      } else {
+        modal.classList.remove('active');
+      }
+    }
+
+    // Phone Auto-Format (081-234-5678)
+    const phoneInput = document.getElementById("phone");
+    phoneInput.addEventListener("input", (e) => {
+      let val = e.target.value.replace(/\D/g, "");
+      if (val.length > 10) val = val.substring(0, 10);
+      
+      if (val.length > 6) {
+        e.target.value = `${val.substring(0, 3)}-${val.substring(3, 6)}-${val.substring(6)}`;
+      } else if (val.length > 3) {
+        e.target.value = `${val.substring(0, 3)}-${val.substring(3)}`;
+      } else {
+        e.target.value = val;
+      }
+    });
+
+    // Trigger LINE Login explicitly
+    function triggerLineLogin() {
+      if (typeof liff !== "undefined" && liff.init) {
+        if (!liff.isLoggedIn()) {
+          liff.login({ redirectUri: window.location.href });
+        }
+      }
+    }
+
+    // Main Initialization
+    async function main() {
+      try {
+        if (CONFIG.LIFF_ID) {
+          await liff.init({ liffId: CONFIG.LIFF_ID });
+
+          if (liff.isLoggedIn()) {
+            const profile = await liff.getProfile();
+            
+            document.getElementById("lineUserId").value = profile.userId;
+            document.getElementById("lineDisplayName").value = profile.displayName;
+            document.getElementById("linePictureUrl").value = profile.pictureUrl || "";
+
+            document.getElementById("profileNameDisplay").textContent = profile.displayName;
+            document.getElementById("profileUidDisplay").textContent = `LINE ID: ${profile.userId.substring(0, 14)}...`;
+            
+            const verifiedIcon = document.getElementById("verifiedIcon");
+            verifiedIcon.style.display = "inline-block";
+            verifiedIcon.style.opacity = "1";
+
+            document.getElementById("btnLineLogin").style.display = "none";
+
+            if (profile.pictureUrl) {
+              const avatarBox = document.getElementById("avatarBox");
+              avatarBox.innerHTML = `<img src="${profile.pictureUrl}" alt="${profile.displayName}">`;
+            }
+          } else {
+            if (liff.isInClient()) {
+              liff.login();
+            } else {
+              document.getElementById("profileNameDisplay").textContent = "ผู้ใช้งานเว็บ (Web Access)";
+              document.getElementById("profileUidDisplay").textContent = "LINE ID: Web Access";
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("LIFF Initialization Note:", err);
+      }
+
+      // ดึง list โครงการเฉพาะที่ status = Active จาก n8n
+      loadActiveProjects();
+    }
+
+    // Fetch Active Projects from n8n Webhook (เฉพาะที่ status = Active)
+    async function loadActiveProjects() {
+      const select = document.getElementById("projectCode");
+      try {
+        const res = await fetch(CONFIG.N8N_GET_PROJECTS_URL);
+        if (!res.ok) throw new Error("HTTP Status " + res.status);
+        
+        const projects = await res.json();
+        select.innerHTML = '<option value="">-- กรุณาเลือกโครงการ / บริการ --</option>';
+        
+        // Filter and populate active projects
+        if (Array.isArray(projects) && projects.length > 0) {
+          const activeProjects = projects.filter(p => p.status === undefined || p.status === "Active" || p.status === "active" || p.is_active === true);
+          const displayList = activeProjects.length > 0 ? activeProjects : projects;
+
+          displayList.forEach(p => {
+            const opt = document.createElement("option");
+            const code = p.project_code || p.code || p.id || p.name;
+            const name = p.project_name || p.name || code;
+            opt.value = code;
+            opt.textContent = `${name} (${code})`;
+            select.appendChild(opt);
+          });
+        } else {
+          select.innerHTML = '<option value="">-- ไม่พบรายการโครงการในขณะนี้ --</option>';
+        }
+      } catch (err) {
+        console.error("Unable to load projects from n8n backend:", err);
+        select.innerHTML = '<option value="">❌ เกิดข้อผิดพลาดในการโหลดรายการโครงการ</option>';
+        showToast("ไม่สามารถโหลดรายการโครงการได้ โปรดตรวจสอบการเชื่อมต่อ n8n", "error");
+      }
+    }
+
+    // Submit Registration Form
+    document.getElementById("regForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById("submitBtn");
+      const btnText = document.getElementById("btnText");
+      const btnIcon = document.getElementById("btnIcon");
+
+      // Validation for Phone
+      const rawPhone = document.getElementById("phone").value.replace(/\D/g, "");
+      if (!/^0[0-9]{9}$/.test(rawPhone)) {
+        showToast("กรุณากรอกเบอร์โทรศัพท์ 10 หลักขึ้นต้นด้วย 0", "error");
+        return;
+      }
+
+      // Determine LINE User ID
+      let lineUserId = document.getElementById("lineUserId").value;
+      if (!lineUserId) {
+        lineUserId = "web_" + rawPhone;
+      }
+
+      let lineDisplayName = document.getElementById("lineDisplayName").value;
+      if (!lineDisplayName) {
+        lineDisplayName = document.getElementById("fullName").value;
+      }
+
+      // UI Loading State
+      submitBtn.disabled = true;
+      btnText.textContent = "กำลังลงทะเบียน...";
+      btnIcon.className = "spinner";
+
+      const nowIso = new Date().toISOString();
+      const payload = {
+        line_user_id: lineUserId,
+        line_display_name: lineDisplayName,
+        line_picture_url: document.getElementById("linePictureUrl").value,
+        full_name: document.getElementById("fullName").value,
+        phone: rawPhone,
+        email: document.getElementById("email").value,
+        company: document.getElementById("company").value,
+        project_code: document.getElementById("projectCode").value,
+        pdpa_consent: document.getElementById("pdpaConsent").checked,
+        pdpa_consent_datetime: nowIso,
+        platform: (typeof liff !== "undefined" && liff.isInClient && liff.isInClient()) ? "MOBILE_LIFF" : "DESKTOP_WEB",
+        registered_at: nowIso
+      };
+
+      try {
+        const response = await fetch(CONFIG.N8N_REGISTER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          showToast("ลงทะเบียนสำเร็จเรียบร้อย!", "success");
+          
+          // Populate Receipt Screen
+          document.getElementById("recFullName").textContent = payload.full_name;
+          document.getElementById("recPhone").textContent = document.getElementById("phone").value;
+          
+          const projSelect = document.getElementById("projectCode");
+          document.getElementById("recProject").textContent = projSelect.options[projSelect.selectedIndex] ? projSelect.options[projSelect.selectedIndex].text : payload.project_code;
+          
+          document.getElementById("recDate").textContent = new Date().toLocaleDateString('th-TH', {
+            year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+
+          setTimeout(() => {
+            document.getElementById("formView").style.display = "none";
+            document.getElementById("successView").style.display = "block";
+          }, 500);
+        } else {
+          showToast("เกิดข้อผิดพลาดในการบันทึกข้อมูล", "error");
+        }
+      } catch (err) {
+        console.error("Submission error:", err);
+        showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", "error");
+      } finally {
+        submitBtn.disabled = false;
+        btnText.textContent = "ยืนยันการลงทะเบียน";
+        btnIcon.className = "fa-solid fa-paper-plane";
+      }
+    });
+
+    // Close LIFF Window or Web View
+    function closeLiffWindow() {
+      if (typeof liff !== "undefined" && liff.isInClient && liff.isInClient()) {
+        liff.closeWindow();
+      } else {
+        alert("ขอบคุณสำหรับการลงทะเบียน สามารถปิดหน้านี้ได้ทันที");
+      }
+    }
+
+    // Run Initialization
+    main();
+  </script>
+</body>
+</html>
