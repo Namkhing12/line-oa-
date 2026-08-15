@@ -514,14 +514,17 @@ select.form-control {
 .toast.error { background: #EF4444; }
 
 /* Success Screen */
-.success-screen {
+/* Status Screens (Success, Already Registered, Failed) */
+.success-screen,
+.status-screen {
   display: none;
   text-align: center;
   padding: 36px 24px;
   animation: fadeIn 0.4s ease-out;
 }
 
-.success-icon-wrap {
+.success-icon-wrap,
+.status-icon-wrap {
   width: 76px;
   height: 76px;
   background: var(--line-green-light);
@@ -534,13 +537,25 @@ select.form-control {
   margin: 0 auto 18px auto;
 }
 
-.success-screen h2 {
+.status-icon-wrap.warning-icon {
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+.status-icon-wrap.error-icon {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.success-screen h2,
+.status-screen h2 {
   font-size: 22px;
   margin-bottom: 6px;
   color: var(--text-main);
 }
 
-.success-screen p {
+.success-screen p,
+.status-screen p {
   font-size: 14px;
   color: var(--text-muted);
   margin-bottom: 24px;

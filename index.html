@@ -173,6 +173,39 @@
       </button>
     </div>
 
+    <!-- Already Registered Screen View -->
+    <div id="alreadyRegisteredView" class="status-screen" style="display: none;">
+      <div class="status-icon-wrap warning-icon">
+        <i class="fa-solid fa-user-check"></i>
+      </div>
+      <h2>ท่านเคยลงทะเบียนแล้ว!</h2>
+      <p id="alreadyRegisteredMsg">บัญชี LINE หรือเบอร์โทรศัพท์นี้เคยเปิดใช้งานในระบบแล้ว</p>
+
+      <div class="receipt-box">
+        <div class="receipt-row">
+          <span>สถานะบัญชี:</span>
+          <span class="val" style="color: var(--line-green); font-weight: 600;"><i class="fa-solid fa-circle-check"></i> เป็นสมาชิกเรียบร้อยแล้ว</span>
+        </div>
+        <div class="receipt-row" id="existNameRow" style="display: none;">
+          <span>ชื่อ-นามสกุล:</span>
+          <span class="val" id="existFullName">-</span>
+        </div>
+        <div class="receipt-row" id="existPhoneRow" style="display: none;">
+          <span>เบอร์โทรศัพท์:</span>
+          <span class="val" id="existPhone">-</span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button class="btn-close-liff" onclick="closeLiffWindow()">
+          <i class="fa-solid fa-comment"></i> กลับสู่แชท LINE
+        </button>
+        <button type="button" class="btn-retry-project" style="justify-content: center; width: 100%; padding: 10px; font-size: 14px;" onclick="showFormView()">
+          <i class="fa-solid fa-arrow-left"></i> กลับสู่หน้ากรอกข้อมูล
+        </button>
+      </div>
+    </div>
+
   </div>
 
   <!-- PDPA Policy Modal Drawer -->
@@ -613,7 +646,50 @@
           // Response body is not JSON or empty
         }
 
-        if (response.ok) {
+        // Unhappy Case Evaluation: Check if JSON indicates failure
+        const isJsonFailure = resJson && (resJson.success === false || resJson.status === 'error' || resJson.status === 'failed');
+        
+        // Unhappy Case Evaluation: Check if user/phone/LINE ID already registered
+        const isDuplicate = response.status === 409 || 
+          (resJson && (
+            resJson.is_registered === true || 
+            resJson.already_registered === true || 
+            resJson.exists === true || 
+            resJson.status === 'duplicate' || 
+            resJson.status === 'already_registered' || 
+            resJson.code === 'ALREADY_EXISTS' ||
+            (resJson.message && /ลงทะเบียนแล้ว|มีบัญชี|already|duplicate/i.test(resJson.message)) ||
+            (resJson.error && /ลงทะเบียนแล้ว|มีบัญชี|already|duplicate/i.test(resJson.error))
+          ));
+
+        if (isDuplicate) {
+          // Unhappy Case: มีบัญชีอยู่แล้ว (Already Registered)
+          const existMsg = (resJson && (resJson.message || resJson.detail)) 
+            ? (resJson.message || resJson.detail) 
+            : "บัญชี LINE หรือเบอร์โทรศัพท์นี้ได้ลงทะเบียนไว้ในระบบเรียบร้อยแล้ว";
+
+          showToast("⚠️ ท่านได้ลงทะเบียนสมาชิกในระบบเรียบร้อยแล้ว", "info");
+          
+          const existNameRow = document.getElementById("existNameRow");
+          const existPhoneRow = document.getElementById("existPhoneRow");
+          if (resJson && (resJson.full_name || resJson.name)) {
+            document.getElementById("existFullName").textContent = resJson.full_name || resJson.name;
+            if (existNameRow) existNameRow.style.display = "flex";
+          }
+          if (resJson && resJson.phone) {
+            document.getElementById("existPhone").textContent = resJson.phone;
+            if (existPhoneRow) existPhoneRow.style.display = "flex";
+          }
+          const alreadyRegMsg = document.getElementById("alreadyRegisteredMsg");
+          if (alreadyRegMsg) alreadyRegMsg.textContent = existMsg;
+
+          setTimeout(() => {
+            document.getElementById("formView").style.display = "none";
+            document.getElementById("alreadyRegisteredView").style.display = "block";
+          }, 400);
+
+        } else if (response.ok && !isJsonFailure) {
+          // Happy Path: ลงทะเบียนสำเร็จ
           showToast("ลงทะเบียนสำเร็จเรียบร้อย!", "success");
           
           // Populate Receipt Screen
@@ -631,14 +707,13 @@
             document.getElementById("formView").style.display = "none";
             document.getElementById("successView").style.display = "block";
           }, 500);
+
         } else {
-          // Unhappy Path: Handle HTTP Status Codes & Error Messages from Backend API
-          let serverErrMsg = "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
+          // Unhappy Case: ลงทะเบียนไม่สำเร็จ (Registration Failed)
+          let serverErrMsg = "เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่อีกครั้ง";
           
           if (resJson && (resJson.message || resJson.error || resJson.detail)) {
             serverErrMsg = resJson.message || resJson.error || resJson.detail;
-          } else if (response.status === 409) {
-            serverErrMsg = "บัญชี LINE หรือเบอร์โทรศัพท์นี้ได้ลงทะเบียนไว้ในระบบแล้ว";
           } else if (response.status === 429) {
             serverErrMsg = "มีการทำรายการถี่เกินไป กรุณารอสักครู่แล้วลองใหม่อีกครั้ง";
           } else if (response.status === 400) {
@@ -647,8 +722,8 @@
             serverErrMsg = `ระบบเซิร์ฟเวอร์ขัดข้องชั่วคราว (HTTP ${response.status}) กรุณาลองใหม่อีกครั้ง`;
           }
 
-          showToast(serverErrMsg, "error");
-          showGlobalBanner(`เกิดข้อผิดพลาด: ${serverErrMsg}`, "error");
+          showToast(`❌ ลงทะเบียนไม่สำเร็จ: ${serverErrMsg}`, "error");
+          showGlobalBanner(`❌ ลงทะเบียนไม่สำเร็จ: ${serverErrMsg}`, "error", `<button type="button" class="btn-retry-project" onclick="document.getElementById('regForm').requestSubmit()"><i class="fa-solid fa-rotate-right"></i> ลองใหม่อีกครั้ง</button>`);
         }
       } catch (err) {
         console.error("Submission error:", err);
@@ -671,6 +746,16 @@
         btnIcon.className = "fa-solid fa-paper-plane";
       }
     });
+
+    // Switch back to form view
+    function showFormView() {
+      const alreadyReg = document.getElementById("alreadyRegisteredView");
+      const successView = document.getElementById("successView");
+      const formView = document.getElementById("formView");
+      if (alreadyReg) alreadyReg.style.display = "none";
+      if (successView) successView.style.display = "none";
+      if (formView) formView.style.display = "block";
+    }
 
     // Close LIFF Window or Web View
     function closeLiffWindow() {
