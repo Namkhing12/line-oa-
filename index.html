@@ -902,13 +902,27 @@
         const res = await fetch(CONFIG.N8N_GET_PROJECTS_URL);
         if (!res.ok) throw new Error("HTTP Status " + res.status);
         
-        const projects = await res.json();
+        const responseData = await res.json();
         select.innerHTML = '<option value="">-- กรุณาเลือกโครงการ / บริการ --</option>';
         
+        // Extract array from responseData (handles [], { data: [] }, { result: [] }, { projects: [] })
+        let projectList = [];
+        if (Array.isArray(responseData)) {
+          projectList = responseData;
+        } else if (responseData && Array.isArray(responseData.data)) {
+          projectList = responseData.data;
+        } else if (responseData && Array.isArray(responseData.projects)) {
+          projectList = responseData.projects;
+        } else if (responseData && Array.isArray(responseData.result)) {
+          projectList = responseData.result;
+        } else if (responseData && typeof responseData === 'object' && (responseData.project_code || responseData.name || responseData.id)) {
+          projectList = [responseData];
+        }
+        
         // Filter and populate active projects
-        if (Array.isArray(projects) && projects.length > 0) {
-          const activeProjects = projects.filter(p => p.status === undefined || p.status === "Active" || p.status === "active" || p.is_active === true);
-          const displayList = activeProjects.length > 0 ? activeProjects : projects;
+        if (projectList.length > 0) {
+          const activeProjects = projectList.filter(p => p.status === undefined || p.status === "Active" || p.status === "active" || p.is_active === true);
+          const displayList = activeProjects.length > 0 ? activeProjects : projectList;
 
           displayList.forEach(p => {
             const opt = document.createElement("option");
