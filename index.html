@@ -879,11 +879,13 @@
               avatarBox.innerHTML = `<img src="${profile.pictureUrl}" alt="${profile.displayName}">`;
             }
           } else {
+            // ไม่ได้ยืนยันตัวตนด้วย LINE -> ปรับ UI และแสดงปุ่มเข้าสู่ระบบ LINE
+            document.getElementById("profileNameDisplay").textContent = "ยังไม่ได้เชื่อมต่อ LINE";
+            document.getElementById("profileUidDisplay").textContent = "กรุณากดปุ่มเข้าสู่ระบบด้วย LINE";
+            document.getElementById("btnLineLogin").style.display = "inline-flex";
+
             if (liff.isInClient()) {
               liff.login();
-            } else {
-              document.getElementById("profileNameDisplay").textContent = "ผู้ใช้งานเว็บ (Web Access)";
-              document.getElementById("profileUidDisplay").textContent = "LINE ID: Web Access";
             }
           }
         }
@@ -956,16 +958,15 @@
         return;
       }
 
-      // Determine LINE User ID
+      // Determine LINE User ID (ต้องมีค่าจาก LINE Profile จริงเท่านั้น)
       let lineUserId = document.getElementById("lineUserId").value;
       if (!lineUserId) {
-        lineUserId = "web_" + rawPhone;
+        showToast("กรุณาเข้าสู่ระบบ LINE ก่อนทำการลงทะเบียน", "error");
+        triggerLineLogin();
+        return;
       }
 
-      let lineDisplayName = document.getElementById("lineDisplayName").value;
-      if (!lineDisplayName) {
-        lineDisplayName = document.getElementById("fullName").value;
-      }
+      let lineDisplayName = document.getElementById("lineDisplayName").value || document.getElementById("fullName").value;
 
       // UI Loading State
       submitBtn.disabled = true;
