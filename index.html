@@ -890,7 +890,8 @@
           }
         }
       } catch (err) {
-        console.warn("LIFF Initialization Note:", err);
+        console.error("LIFF Initialization Error:", err);
+        showToast("LIFF Init Error (400): โปรดตรวจสอบ LIFF ID และ Endpoint URL ใน LINE Console", "error");
       }
 
       // ดึง list โครงการเฉพาะที่ status = Active จาก n8n
