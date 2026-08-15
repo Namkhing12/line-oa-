@@ -776,8 +776,8 @@
     // PRODUCTION CONFIGURATION
     // =======================================================================
     const CONFIG = {
-      LIFF_ID: "2010806104-mJz5dgfg", // LINE LIFF App ID
-      LIFF_URL: "https://liff.line.me/2010806104-mJz5dgfg",
+      LIFF_ID: "2010806104-99Q0WLbQ", // LINE LIFF App ID
+      LIFF_URL: "https://liff.line.me/2010806104-99Q0WLbQ",
       N8N_GET_PROJECTS_URL: "https://n8n.arterypartner.dev/webhook/get-active-projects",
       N8N_REGISTER_URL: "https://n8n.arterypartner.dev/webhook/line-register"
     };
@@ -850,6 +850,20 @@
             document.getElementById("lineUserId").value = profile.userId;
             document.getElementById("lineDisplayName").value = profile.displayName;
             document.getElementById("linePictureUrl").value = profile.pictureUrl || "";
+
+            // Auto-fill Email from Decoded ID Token if available
+            try {
+              const decodedToken = liff.getDecodedIDToken();
+              if (decodedToken && decodedToken.email) {
+                const emailInput = document.getElementById("email");
+                if (emailInput) {
+                  emailInput.value = decodedToken.email;
+                  emailInput.readOnly = true;
+                }
+              }
+            } catch (tokenErr) {
+              console.warn("Could not retrieve decoded ID token email:", tokenErr);
+            }
 
             const nameDisp = document.getElementById("profileNameDisplay");
             if (nameDisp) nameDisp.textContent = profile.displayName;
@@ -968,6 +982,7 @@
         phone: rawPhone,
         email: document.getElementById("email").value,
         company: document.getElementById("company").value,
+        project: document.getElementById("projectCode").value,
         project_code: document.getElementById("projectCode").value,
         pdpa_consent: document.getElementById("pdpaConsent").checked,
         pdpa_consent_datetime: nowIso,
