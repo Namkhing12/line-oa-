@@ -525,26 +525,47 @@ select.form-control {
 
 .success-icon-wrap,
 .status-icon-wrap {
-  width: 76px;
-  height: 76px;
-  background: var(--line-green-light);
-  color: var(--line-green);
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 0 auto 24px auto;
+  font-size: 44px;
+}
+
+.success-icon-wrap {
+  width: 76px;
+  height: 76px;
   font-size: 38px;
+  background: var(--line-green-light);
+  color: var(--line-green);
   margin: 0 auto 18px auto;
 }
 
 .status-icon-wrap.warning-icon {
-  background: #FEF3C7;
+  background: #FFF3D1;
   color: #D97706;
+  box-shadow: 0 4px 10px rgba(217, 119, 6, 0.1);
 }
 
 .status-icon-wrap.error-icon {
   background: #FEE2E2;
-  color: #DC2626;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.15);
+}
+
+.status-icon-wrap.error-icon .error-icon-inner {
+  width: 54px;
+  height: 54px;
+  background: #DC2626;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 4px 10px rgba(220, 38, 38, 0.3);
 }
 
 .success-screen h2,
@@ -574,17 +595,25 @@ select.form-control {
 .receipt-row {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   margin-bottom: 8px;
   color: #475569;
+  gap: 12px;
 }
 
 .receipt-row:last-child {
   margin-bottom: 0;
 }
 
+.receipt-row span:first-child {
+  flex-shrink: 0;
+}
+
 .receipt-row .val {
   font-weight: 500;
   color: var(--text-main);
+  text-align: right;
+  word-break: break-word;
 }
 
 .btn-close-liff {
@@ -661,6 +690,33 @@ select.form-control {
   border-color: #94A3B8;
 }
 
+.status-screen .btn-retry-project {
+  width: 100%;
+  padding: 14px;
+  background: #F8FAFC;
+  color: #475569;
+  border: 1.5px solid #E2E8F0;
+  border-radius: 12px;
+  font-family: 'Kanit', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 0;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  transition: var(--transition);
+}
+
+.status-screen .btn-retry-project:hover {
+  background: #E2E8F0;
+  border-color: #CBD5E1;
+  color: #0F172A;
+  transform: translateY(-1px);
+}
+
 /* Global Error Banner */
 .alert-banner {
   display: none;
@@ -716,4 +772,271 @@ select.form-control {
 
 .alert-banner .banner-close:hover {
   opacity: 1;
+}
+
+/* Floating Mockup Preview Controller */
+.mockup-controller {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 12px 14px 14px 14px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  width: 200px;
+  transition: all 0.3s ease;
+}
+
+.controller-title {
+  color: #94A3B8;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.controller-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.controller-buttons button {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #E2E8F0;
+  border: none;
+  padding: 8px 10px;
+  font-size: 11.5px;
+  font-family: 'Kanit', sans-serif;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  font-weight: 400;
+}
+
+.controller-buttons button:hover {
+  background: rgba(6, 199, 85, 0.2);
+  color: white;
+}
+
+.controller-buttons button.active {
+  background: var(--line-green);
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 0 10px rgba(6, 199, 85, 0.3);
+}
+
+.controller-simulator {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 8px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #94A3B8;
+}
+
+.controller-simulator select {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-family: 'Kanit', sans-serif;
+  border-radius: 8px;
+  outline: none;
+  cursor: pointer;
+}
+
+.controller-simulator select option {
+  background: #1E293B;
+  color: white;
+}
+
+/* On mobile / narrow screens, dock it to the bottom-center horizontally so it doesn't overlap text */
+@media (max-width: 900px) {
+  .mockup-controller {
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 10px;
+    width: 92%;
+    max-width: 440px;
+    padding: 8px 14px 10px 14px;
+    flex-direction: column;
+    border-radius: 24px;
+  }
+  .controller-buttons {
+    flex-direction: row;
+  }
+  .controller-buttons button {
+    text-align: center;
+    padding: 7px 5px;
+    font-size: 11px;
+  }
+  .controller-simulator {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 6px;
+  }
+  .controller-simulator select {
+    flex: 1;
+  }
+}
+
+/* Warning Receipt Box (Already Registered) */
+.receipt-box.warning-box {
+  background: #FFFDF5;
+  border: 1.5px dashed #FCD34D;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 28px;
+}
+
+.receipt-box.warning-box .receipt-row {
+  margin-bottom: 12px;
+}
+
+.receipt-box.warning-box .receipt-row:last-child {
+  margin-bottom: 0;
+}
+
+.receipt-box.warning-box .receipt-row span:first-child {
+  color: #B45309;
+  font-weight: 500;
+  font-size: 13.5px;
+}
+
+.receipt-box.warning-box .receipt-row .val {
+  color: #0F172A;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+/* Error Receipt Box (Failed) */
+.receipt-box.error-box {
+  background: #FEF2F2;
+  border: 1.5px dashed #FCA5A5;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 28px;
+}
+
+.receipt-box.error-box .receipt-row {
+  margin-bottom: 12px;
+}
+
+.receipt-box.error-box .receipt-row:last-child {
+  margin-bottom: 0;
+}
+
+.receipt-box.error-box .receipt-row span:first-child {
+  color: #991B1B;
+  font-weight: 500;
+  font-size: 13.5px;
+}
+
+.receipt-box.error-box .receipt-row .val {
+  color: #0F172A;
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.receipt-box.error-box .receipt-row .val.error-val {
+  color: #DC2626;
+}
+
+/* Premium Status Button Styles */
+.btn-status-dark {
+  width: 100%;
+  padding: 14px;
+  background: #1F2937;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Kanit', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+}
+
+.btn-status-dark:hover {
+  background: #111827;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.15);
+}
+
+.btn-status-light {
+  width: 100%;
+  padding: 14px;
+  background: #FFFFFF;
+  color: #4B5563;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 12px;
+  font-family: 'Kanit', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.btn-status-light:hover {
+  background: #F9FAFB;
+  border-color: #D1D5DB;
+  color: #1F2937;
+  transform: translateY(-1px);
+}
+
+.btn-status-red {
+  width: 100%;
+  padding: 14px;
+  background: #EF4444;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Kanit', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: var(--transition);
+  box-shadow: 0 10px 20px -3px rgba(239, 68, 68, 0.25);
+}
+
+.btn-status-red:hover {
+  background: #DC2626;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px -3px rgba(239, 68, 68, 0.35);
 }
