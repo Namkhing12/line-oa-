@@ -614,6 +614,12 @@
       btnText.textContent = "กำลังลงทะเบียน...";
       btnIcon.className = "spinner";
 
+      // Format current date in local time YYYY-MM-DD (e.g. 2026-08-15) for Frappe/ERPNext Date type
+      const localDate = new Date();
+      const tzOffset = 7 * 60; // GMT+7 timezone offset in minutes
+      const localTime = new Date(localDate.getTime() + tzOffset * 60 * 1000);
+      const registrationDate = localTime.toISOString().split('T')[0];
+
       const nowIso = new Date().toISOString();
       const payload = {
         line_user_id: lineUserId,
@@ -625,8 +631,9 @@
         company: document.getElementById("company").value.trim(),
         project: document.getElementById("projectCode").value,
         project_code: document.getElementById("projectCode").value,
-        pdpa_consent: pdpaConsent,
+        pdpa_consent: pdpaConsent ? 1 : 0, // Check field in Frappe maps to 1 (true) or 0 (false)
         pdpa_consent_datetime: nowIso,
+        registration_date: registrationDate, // Matches Mandatory 'registration_date' Date field in DocType
         platform: (typeof liff !== "undefined" && liff.isInClient && liff.isInClient()) ? "MOBILE_LIFF" : "DESKTOP_WEB",
         registered_at: nowIso
       };
