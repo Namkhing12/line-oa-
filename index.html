@@ -290,7 +290,7 @@
     };
 
     let isSubmitting = false;
-    let isMockMode = true;
+    let isMockMode = false;
 
     // Toast Notification helper
     function showToast(message, type = 'info') {
@@ -428,7 +428,7 @@
     async function main() {
       // Check if mockup/mock mode is active
       const urlParams = new URLSearchParams(window.location.search);
-      isMockMode = urlParams.get('mock') !== 'false';
+      isMockMode = urlParams.get('mock') === 'true';
 
       if (isMockMode) {
         showToast("โหมด Mockup: เปิดใช้งานเพื่อจำลองการทำงาน", "info");
@@ -1015,25 +1015,6 @@
     main();
   </script>
 
-  <!-- Mockup Preview Controller (สำหรับตรวจงาน) -->
-  <div class="mockup-controller">
-    <div class="controller-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Preview State</div>
-    <div class="controller-buttons">
-      <button id="btn-mock-form" onclick="showView('formView')" class="active">กรอกข้อมูล</button>
-      <button id="btn-mock-success" onclick="showView('successView')">สำเร็จ</button>
-      <button id="btn-mock-already" onclick="showView('alreadyRegisteredView')">เคยลงทะเบียน</button>
-      <button id="btn-mock-failed" onclick="showView('failedView')">ล้มเหลว</button>
-    </div>
-    <div class="controller-simulator">
-      <span>จำลองผลกดส่ง:</span>
-      <select id="mockSubmitResult">
-        <option value="success">สำเร็จ (Success)</option>
-        <option value="already">เคยลงทะเบียนแล้ว (Already Registered)</option>
-        <option value="timeout">การเชื่อมต่อหมดเวลา (Timeout)</option>
-        <option value="server_error">เซิร์ฟเวอร์ขัดข้อง (Server Error 500)</option>
-      </select>
-    </div>
-  </div>
 </body>
 
 </html>
