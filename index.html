@@ -884,18 +884,7 @@
         el.addEventListener('input', () => removeFieldError(id, `${id}Error`));
       }
     });
-    const pdpaScroll = document.getElementById('pdpaScrollBody');
-    if (pdpaScroll) {
-      pdpaScroll.addEventListener('scroll', () => {
-        if (pdpaScroll.scrollTop + pdpaScroll.clientHeight >= pdpaScroll.scrollHeight - 10) {
-          const scrollEnd = document.getElementById('pdpaScrollEnd');
-          if (scrollEnd) {
-            scrollEnd.style.background = '#DCFCE7';
-            scrollEnd.style.color = '#15803D';
-          }
-        }
-      });
-    }
+
 
     const projInput = document.getElementById('projectCode');
     if (projInput) {
