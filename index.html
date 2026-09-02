@@ -272,17 +272,18 @@
               หากคุณมีข้อสงสัยเกี่ยวกับนโยบายความเป็นส่วนตัวนี้ หรือต้องการใช้สิทธิของเจ้าของข้อมูลส่วนบุคคล สามารถติดต่อเจ้าหน้าที่หรือแอดมินผ่านช่องทาง LINE Official Account นี้ได้ตลอดเวลา</p>
 
               <div class="pdpa-scroll-end" id="pdpaScrollEnd">
-                <i class="fa-solid fa-arrow-down"></i> กรุณาเลื่อนลงเพื่ออ่านข้อกำหนดให้ครบถ้วนก่อนกดยินยอม
+                <i class="fa-solid fa-arrow-down"></i> กรุณาเลื่อนลงเพื่ออ่านข้อกำหนดให้ครบถ้วนก่อนติ๊กยินยอม
               </div>
             </div>
 
-            <div class="pdpa-choice-actions">
-              <button type="button" class="btn-pdpa-choice btn-pdpa-decline" id="btnPdpaDecline" onclick="setPdpaChoice(false)">
-                <i class="fa-solid fa-xmark"></i> ไม่ยินยอม
-              </button>
-              <button type="button" class="btn-pdpa-choice btn-pdpa-accept" id="btnPdpaAccept" onclick="setPdpaChoice(true)" disabled title="กรุณาเลื่อนอ่านนโยบายลงมาให้สุดก่อน">
-                <i class="fa-solid fa-lock"></i> ยินยอม (เลื่อนลงสุดก่อน)
-              </button>
+            <div class="pdpa-checkbox-card" id="pdpaCheckboxCard">
+              <label class="pdpa-checkbox-label" for="pdpaCheckbox">
+                <input type="checkbox" id="pdpaCheckbox" disabled onchange="handlePdpaCheckboxChange(this)" title="กรุณาเลื่อนลงไปอ่านข้อกำหนดข้างต้นให้สุดก่อนติ๊กยินยอม">
+                <span class="checkbox-text">ข้าพเจ้ายินยอมตามข้อกำหนดและนโยบายความเป็นส่วนตัว (PDPA)</span>
+              </label>
+              <div class="pdpa-subinfo">
+                คุณสามารถยกเลิกการรับข้อมูลข่าวสาร หรือบริหารจัดการสิทธิ์ความเป็นส่วนตัวได้ตามที่กฎหมายกำหนด (<a href="#" onclick="togglePdpaModal(true); return false;" style="color: var(--line-green); text-decoration: underline; font-weight: 500;">ศึกษาเพิ่มเติม Privacy Policy</a>)
+              </div>
             </div>
           </div>
 
@@ -563,23 +564,20 @@
 
     let isPdpaScrolledToBottom = false;
 
-    // Set PDPA Choice (Accept = true / Decline = false)
-    function setPdpaChoice(isAccepted) {
+    // Handle PDPA Checkbox Change
+    function handlePdpaCheckboxChange(checkbox) {
       const valInput = document.getElementById("pdpaConsentVal");
-      const btnAccept = document.getElementById("btnPdpaAccept");
-      const btnDecline = document.getElementById("btnPdpaDecline");
       const badge = document.getElementById("pdpaStatusBadge");
 
-      if (isAccepted) {
+      if (checkbox.checked) {
         if (!isPdpaScrolledToBottom) {
-          showToast("กรุณาเลื่อนอ่านนโยบาย PDPA ลงไปให้สุดก่อนกดยินยอม", "info");
+          checkbox.checked = false;
+          showToast("กรุณาเลื่อนอ่านนโยบาย PDPA ลงไปให้สุดก่อนติ๊กยินยอม", "info");
           const pdpaScroll = document.getElementById("pdpaScrollBody");
           if (pdpaScroll) pdpaScroll.scrollTo({ top: pdpaScroll.scrollHeight, behavior: "smooth" });
           return;
         }
         if (valInput) valInput.value = "1";
-        if (btnAccept) btnAccept.classList.add("active");
-        if (btnDecline) btnDecline.classList.remove("active");
         if (badge) {
           badge.textContent = "✅ ยินยอมแล้ว";
           badge.className = "pdpa-badge accepted";
@@ -588,14 +586,28 @@
         showToast("ยินยอมนโยบายความเป็นส่วนตัว (PDPA) เรียบร้อย", "success");
       } else {
         if (valInput) valInput.value = "0";
-        if (btnDecline) btnDecline.classList.add("active");
-        if (btnAccept) btnAccept.classList.remove("active");
         if (badge) {
-          badge.textContent = "❌ ไม่ยินยอม";
+          badge.textContent = "ยังไม่ได้ยินยอม";
           badge.className = "pdpa-badge declined";
         }
-        showFieldError("pdpaBox", "pdpaError", "ท่านเลือกไม่ยินยอมนโยบาย PDPA (จำเป็นต้องยินยอมเพื่อลงทะเบียน)");
-        showToast("⚠️ ท่านเลือกไม่ยินยอมนโยบาย PDPA", "info");
+      }
+    }
+
+    // Set PDPA Choice from Modal (Accept = true / Decline = false)
+    function setPdpaChoice(isAccepted) {
+      const checkbox = document.getElementById("pdpaCheckbox");
+      if (isAccepted) {
+        if (checkbox && !checkbox.disabled) {
+          checkbox.checked = true;
+          handlePdpaCheckboxChange(checkbox);
+        } else {
+          showToast("กรุณาเลื่อนอ่านนโยบาย PDPA ลงไปให้สุดก่อนกดยินยอม", "info");
+        }
+      } else {
+        if (checkbox) {
+          checkbox.checked = false;
+          handlePdpaCheckboxChange(checkbox);
+        }
       }
     }
 
@@ -893,7 +905,7 @@
       });
     }
 
-    // Scroll Listener for PDPA Body: Unlock Accept button when scrolled to bottom
+    // Scroll Listener for PDPA Body: Unlock Checkbox when scrolled to bottom
     const pdpaScroll = document.getElementById('pdpaScrollBody');
     if (pdpaScroll) {
       const checkPdpaScroll = () => {
@@ -901,21 +913,24 @@
                            (pdpaScroll.scrollHeight <= pdpaScroll.clientHeight + 10);
         if (isAtBottom && !isPdpaScrolledToBottom) {
           isPdpaScrolledToBottom = true;
-          const btnAccept = document.getElementById('btnPdpaAccept');
-          if (btnAccept) {
-            btnAccept.disabled = false;
-            btnAccept.innerHTML = '<i class="fa-solid fa-check"></i> ยินยอม';
-            btnAccept.title = "กดเพื่อยินยอมนโยบาย PDPA";
+          const checkbox = document.getElementById('pdpaCheckbox');
+          const checkboxCard = document.getElementById('pdpaCheckboxCard');
+          if (checkbox) {
+            checkbox.disabled = false;
+            checkbox.title = "กดเพื่อติ๊กยินยอมนโยบาย PDPA";
+          }
+          if (checkboxCard) {
+            checkboxCard.classList.add('unlocked');
           }
           const scrollEnd = document.getElementById('pdpaScrollEnd');
           if (scrollEnd) {
             scrollEnd.style.background = '#DCFCE7';
             scrollEnd.style.color = '#15803D';
-            scrollEnd.innerHTML = '<i class="fa-solid fa-circle-check"></i> อ่านข้อกำหนดครบถ้วนแล้ว สามารถกดปุ่ม "ยินยอม" ได้';
+            scrollEnd.innerHTML = '<i class="fa-solid fa-circle-check"></i> อ่านข้อกำหนดครบถ้วนแล้ว ท่านสามารถติ๊กช่องยินยอมด้านล่างได้';
           }
           const badge = document.getElementById("pdpaStatusBadge");
           if (badge && (badge.textContent === "ยังไม่ได้เลือก" || badge.textContent === "ยังไม่ได้อ่าน")) {
-            badge.textContent = "อ่านครบแล้ว";
+            badge.textContent = "อ่านครบแล้ว (พร้อมติ๊กยินยอม)";
             badge.className = "pdpa-badge";
           }
         }
