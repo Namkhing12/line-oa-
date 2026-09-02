@@ -105,7 +105,7 @@
               <i class="fa-regular fa-building"></i> บริษัท / องค์กร <span class="required">*</span>
             </label>
             <div class="input-wrapper">
-              <input type="text" id="company" class="form-control" required placeholder="กรอกชื่อบริษัท หรือชื่อองค์กร / ร้านค้า">
+              <input type="text" id="company" class="form-control" required placeholder="กรอกชื่อบริษัท หรือชื่อองค์กร">
               <i class="fa-solid fa-building input-icon"></i>
             </div>
             <div class="error-msg" id="companyError"><i class="fa-solid fa-circle-exclamation"></i>
@@ -528,7 +528,7 @@
 
       if (availableProjects.length === 0) {
         hint.className = "field-hint";
-        hintText.innerHTML = '<i class="fa-solid fa-circle-info"></i> ข้อมูลโครงการจะถูกส่งเพื่อ map กับระบบ ERPNext';
+        hintText.innerHTML = '<i class="fa-solid fa-circle-info"></i> ข้อมูลโครงการจะถูกส่งเพื่อเชื่อมต่อกับระบบ ERPNext';
         return true;
       }
 
