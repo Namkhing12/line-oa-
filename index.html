@@ -110,33 +110,62 @@
             </div>
           </div>
 
-          <!-- Dropdown เลือกรหัส LineOA Project (ดึง list จาก n8n เฉพาะที่ status = Active) -->
+          <!-- โครงการ / รหัสโปรเจกต์ (ให้กรอกเอง สำหรับ map กับ ERPNext) -->
           <div class="form-group">
             <label class="form-label" for="projectCode">
-              <i class="fa-solid fa-diagram-project"></i> โครงการ / ช่องทางบริการ (LineOA Project) (ถ้ามี)
+              <i class="fa-solid fa-diagram-project"></i> โครงการ / รหัสโปรเจกต์ (ERPNext Project) (ถ้ามี)
             </label>
             <div class="input-wrapper">
-              <select id="projectCode" class="form-control">
-                <option value="">-- ไม่ระบุ / เลือกโครงการ (ถ้ามี) --</option>
-              </select>
+              <input type="text" id="projectCode" list="projectSuggestions" class="form-control" placeholder="พิมพ์ชื่อหรือรหัสโครงการ (เช่น PROJ001)..." autocomplete="off">
+              <datalist id="projectSuggestions"></datalist>
               <i class="fa-solid fa-folder-tree input-icon"></i>
-              <i class="fa-solid fa-chevron-down select-arrow"></i>
+              <button type="button" id="btnVerifyProject" class="btn-input-action" onclick="checkProjectManual(true)" title="ตรวจสอบโครงการกับ ERPNext">
+                <i class="fa-solid fa-magnifying-glass"></i>
+              </button>
+            </div>
+            <div class="field-hint" id="projectStatusHint">
+              <span id="projectHintText"><i class="fa-solid fa-circle-info"></i> สามารถพิมพ์ระบุรหัสหรือชื่อโครงการที่ตรงกับระบบ ERPNext ได้</span>
             </div>
             <div id="projectRetryBox"></div>
           </div>
 
-          <!-- PDPA Consent Checkbox -->
+          <!-- PDPA Consent Box (เลื่อนอ่านข้อกำหนด และกดยินยอม หรือ ไม่ยินยอม) -->
           <div class="pdpa-box" id="pdpaBox">
-            <label class="checkbox-container">
-              <input type="checkbox" id="pdpaConsent" required>
-              <span class="checkmark"></span>
-              <span class="pdpa-text">
-                ฉันยินยอมให้จัดเก็บและใช้ข้อมูลส่วนบุคคลตาม
-                <span class="pdpa-link" onclick="togglePdpaModal(true)">นโยบายความเป็นส่วนตัว (PDPA)</span>
-              </span>
-            </label>
-            <div class="error-msg" id="pdpaError" style="margin-top: 8px;"><i
-                class="fa-solid fa-circle-exclamation"></i> <span>กรุณายินยอมนโยบาย PDPA ก่อนลงทะเบียน</span></div>
+            <div class="pdpa-scroll-card">
+              <div class="pdpa-scroll-header">
+                <span><i class="fa-solid fa-shield-halved" style="color: var(--line-green);"></i> นโยบายความเป็นส่วนตัว (PDPA) <span class="required">*</span></span>
+                <span class="pdpa-badge" id="pdpaStatusBadge">ยังไม่ได้เลือก</span>
+              </div>
+
+              <div class="pdpa-scroll-body" id="pdpaScrollBody">
+                <p><strong>1. วัตถุประสงค์การจัดเก็บและใช้งานข้อมูลส่วนบุคคล</strong></p>
+                <p>ทางบริษัทและผู้ให้บริการจัดเก็บข้อมูลส่วนบุคคล ได้แก่ ชื่อ-นามสกุล, เบอร์โทรศัพท์, อีเมล, ข้อมูลบัญชี LINE และชื่อองค์กร เพื่อใช้ในการยืนยันตัวตน ให้บริการ ส่งข้อมูลสิทธิประโยชน์ และเชื่อมโยงข้อมูลกับระบบ ERPNext</p>
+                
+                <p><strong>2. ความปลอดภัยและระยะเวลาการจัดเก็บ</strong></p>
+                <p>ข้อมูลของท่านจะได้รับการปกป้องตามมาตรฐานความปลอดภัยทางอิเล็กทรอนิกส์ มีการควบคุมสิทธิ์การเข้าถึงอย่างรัดกุม และเก็บรักษาไว้ตามระยะเวลาที่จำเป็นต่อการให้บริการตามวัตถุประสงค์</p>
+                
+                <p><strong>3. สิทธิ์ของเจ้าของข้อมูลส่วนบุคคล</strong></p>
+                <p>ท่านสามารถขอเข้าถึง ตรวจสอบ ขอแก้ไขให้ถูกต้อง หรือขอให้ระงับ/ลบข้อมูลส่วนบุคคลของท่านได้ทุกเมื่อ ผ่านช่องทางแอดมิน LINE Official Account</p>
+                
+                <div class="pdpa-scroll-end" id="pdpaScrollEnd">
+                  <i class="fa-solid fa-check-double"></i> เลื่อนอ่านข้อกำหนดครบถ้วนแล้ว
+                </div>
+              </div>
+
+              <div class="pdpa-choice-actions">
+                <button type="button" class="btn-pdpa-choice btn-pdpa-decline" id="btnPdpaDecline" onclick="setPdpaChoice(false)">
+                  <i class="fa-solid fa-xmark"></i> ไม่ยินยอม
+                </button>
+                <button type="button" class="btn-pdpa-choice btn-pdpa-accept" id="btnPdpaAccept" onclick="setPdpaChoice(true)">
+                  <i class="fa-solid fa-check"></i> ยินยอม
+                </button>
+              </div>
+            </div>
+
+            <input type="hidden" id="pdpaConsentVal" value="">
+            <div class="error-msg" id="pdpaError" style="margin-top: 8px;">
+              <i class="fa-solid fa-circle-exclamation"></i> <span>กรุณากดยินยอมนโยบาย PDPA ก่อนลงทะเบียน</span>
+            </div>
           </div>
 
           <!-- Submit Button -->
@@ -265,14 +294,51 @@
         <p><strong>ข้อกำหนดการคุ้มครองข้อมูลส่วนบุคคล (PDPA Privacy Policy)</strong></p><br>
         <p>1. <strong>วัตถุประสงค์การจัดเก็บ:</strong> ทางบริษัทจัดเก็บข้อมูลส่วนบุคคล ได้แก่ ชื่อ-นามสกุล,
           เบอร์โทรศัพท์, อีเมล, ข้อมูล LINE ID และชื่อองค์กร เพื่อใช้ในการยืนยันตัวตน ให้บริการ
-          และส่งข่าวสารสิทธิประโยชน์ผ่านช่องทาง LINE OA</p><br>
+          และส่งข่าวสารสิทธิประโยชน์ผ่านช่องทาง LINE OA และระบบ ERPNext</p><br>
         <p>2. <strong>ระยะเวลาการจัดเก็บ:</strong> ข้อมูลจะถูกเก็บรักษาไว้อย่างปลอดภัยตามมาตรการรักษาความปลอดภัยข้อมูล
           และจะถูกเก็บเท่าที่จำเป็นตามวัตถุประสงค์ในการให้บริการ</p><br>
         <p>3. <strong>สิทธิ์ของผู้ให้ข้อมูล:</strong> ท่านสามารถขอเข้าถึง แก้ไข ปรับปรุง
           หรือขอให้ลบข้อมูลส่วนบุคคลของท่านได้โดยติดต่อแอดมินผ่านช่องทาง LINE Official Account</p>
       </div>
-      <div class="modal-footer">
-        <button class="btn-secondary" onclick="togglePdpaModal(false)">รับทราบและปิดหน้าต่าง</button>
+      <div class="modal-footer modal-footer-actions">
+        <button type="button" class="btn-pdpa-choice btn-pdpa-decline" onclick="setPdpaChoice(false); togglePdpaModal(false);">
+          <i class="fa-solid fa-xmark"></i> ไม่ยินยอม
+        </button>
+        <button type="button" class="btn-pdpa-choice btn-pdpa-accept active" onclick="setPdpaChoice(true); togglePdpaModal(false);">
+          <i class="fa-solid fa-check"></i> ยินยอม
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Project Not Found Alert Modal (แจ้งเตือนป๊อปอัพเมื่อไม่พบโครงการในระบบ ERPNext) -->
+  <div class="modal-overlay" id="projectNotFoundModal">
+    <div class="modal-card modal-warning-card">
+      <div class="modal-header modal-header-warning">
+        <h3><i class="fa-solid fa-triangle-exclamation"></i> ไม่พบโครงการในระบบ ERPNext</h3>
+        <button type="button" class="modal-close" onclick="closeProjectModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="warning-modal-content">
+          <div class="warning-icon-badge">
+            <i class="fa-solid fa-folder-open"></i>
+          </div>
+          <p class="warning-title">ไม่พบรหัสโครงการ "<span id="modalProjectName" style="color: #B45309;">-</span>" ในฐานข้อมูล</p>
+          <p class="warning-subtext">รหัสหรือชื่อโครงการที่คุณระบุไม่มีในรายการของระบบ ERPNext หรืออาจสะกดไม่ตรงกับในระบบ</p>
+          
+          <div class="suggested-projects-box" id="modalSuggestedProjectsBox" style="display: none;">
+            <div class="suggested-header"><i class="fa-solid fa-lightbulb"></i> รายการโครงการที่มีอยู่ในระบบ ERPNext:</div>
+            <div class="suggested-list" id="modalSuggestedList"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-actions">
+        <button type="button" class="btn-status-light" onclick="editProjectInput()">
+          <i class="fa-solid fa-pen-to-square"></i> แก้ไขรหัสโครงการ
+        </button>
+        <button type="button" class="btn-status-warning" onclick="proceedWithCustomProject()">
+          <i class="fa-solid fa-check"></i> ยืนยันใช้รหัสนี้ต่อไป
+        </button>
       </div>
     </div>
   </div>
@@ -291,6 +357,8 @@
 
     let isSubmitting = false;
     let isMockMode = false;
+    let availableProjects = [];
+    let isProjectConfirmed = false;
 
     // Toast Notification helper
     function showToast(message, type = 'info') {
@@ -376,13 +444,198 @@
       }
     }
 
-    // Modal Helper
+    // Modal Helper for PDPA
     function togglePdpaModal(show) {
       const modal = document.getElementById('pdpaModal');
       if (show) {
         modal.classList.add('active');
       } else {
         modal.classList.remove('active');
+      }
+    }
+
+    // Set PDPA Choice (Accept = true / Decline = false)
+    function setPdpaChoice(isAccepted) {
+      const valInput = document.getElementById("pdpaConsentVal");
+      const btnAccept = document.getElementById("btnPdpaAccept");
+      const btnDecline = document.getElementById("btnPdpaDecline");
+      const badge = document.getElementById("pdpaStatusBadge");
+
+      if (isAccepted) {
+        if (valInput) valInput.value = "1";
+        if (btnAccept) btnAccept.classList.add("active");
+        if (btnDecline) btnDecline.classList.remove("active");
+        if (badge) {
+          badge.textContent = "✅ ยินยอมแล้ว";
+          badge.className = "pdpa-badge accepted";
+        }
+        removeFieldError("pdpaBox", "pdpaError");
+        showToast("ยินยอมนโยบายความเป็นส่วนตัว (PDPA) เรียบร้อย", "success");
+      } else {
+        if (valInput) valInput.value = "0";
+        if (btnDecline) btnDecline.classList.add("active");
+        if (btnAccept) btnAccept.classList.remove("active");
+        if (badge) {
+          badge.textContent = "❌ ไม่ยินยอม";
+          badge.className = "pdpa-badge declined";
+        }
+        showFieldError("pdpaBox", "pdpaError", "ท่านเลือกไม่ยินยอมนโยบาย PDPA (จำเป็นต้องยินยอมเพื่อลงทะเบียน)");
+        showToast("⚠️ ท่านเลือกไม่ยินยอมนโยบาย PDPA", "info");
+      }
+    }
+
+    // =======================================================================
+    // ERPNext Project Validation & Modal Functions
+    // =======================================================================
+    function findMatchingProject(query) {
+      if (!query || !availableProjects.length) return null;
+      const q = query.trim().toLowerCase();
+      return availableProjects.find(p => {
+        const code = (p.project_code || p.code || p.id || p.name || '').toLowerCase();
+        const name = (p.project_name || p.name || '').toLowerCase();
+        return code === q || name === q || `${name} (${code})`.toLowerCase() === q;
+      }) || null;
+    }
+
+    function populateProjectDatalist() {
+      const datalist = document.getElementById("projectSuggestions");
+      if (!datalist) return;
+      datalist.innerHTML = "";
+      availableProjects.forEach(p => {
+        const code = p.project_code || p.code || p.id || p.name;
+        const name = p.project_name || p.name || code;
+        const opt = document.createElement("option");
+        opt.value = code;
+        opt.label = `${name} (${code})`;
+        datalist.appendChild(opt);
+      });
+    }
+
+    function validateProjectInput(showModalIfNotFound = false) {
+      const input = document.getElementById("projectCode");
+      const hint = document.getElementById("projectStatusHint");
+      const hintText = document.getElementById("projectHintText");
+      if (!input || !hint || !hintText) return true;
+
+      const val = input.value.trim();
+
+      if (!val) {
+        hint.className = "field-hint";
+        hintText.innerHTML = '<i class="fa-solid fa-circle-info"></i> สามารถพิมพ์ระบุรหัสหรือชื่อโครงการที่ตรงกับระบบ ERPNext ได้';
+        return true;
+      }
+
+      if (availableProjects.length === 0) {
+        hint.className = "field-hint";
+        hintText.innerHTML = '<i class="fa-solid fa-circle-info"></i> ข้อมูลโครงการจะถูกส่งเพื่อ map กับระบบ ERPNext';
+        return true;
+      }
+
+      const match = findMatchingProject(val);
+      if (match) {
+        hint.className = "field-hint valid";
+        const projName = match.project_name || match.name || match.project_code;
+        const projCode = match.project_code || match.code || match.id || projName;
+        hintText.innerHTML = `<i class="fa-solid fa-circle-check"></i> ตรงกับ ERPNext: <strong>${projName}</strong> (${projCode})`;
+        return true;
+      } else {
+        if (isProjectConfirmed) {
+          hint.className = "field-hint valid";
+          hintText.innerHTML = `<i class="fa-solid fa-circle-check"></i> ยืนยันใช้รหัสโครงการ "${val}" สำหรับระบบ ERPNext`;
+          return true;
+        }
+
+        hint.className = "field-hint warning";
+        hintText.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ไม่พบโครงการ "<strong>${val}</strong>" ในระบบ ERPNext`;
+        
+        if (showModalIfNotFound) {
+          showProjectWarningModal(val);
+          return false;
+        }
+        return false;
+      }
+    }
+
+    function showProjectWarningModal(projVal) {
+      const modal = document.getElementById('projectNotFoundModal');
+      const modalProjectName = document.getElementById('modalProjectName');
+      const suggestedBox = document.getElementById('modalSuggestedProjectsBox');
+      const suggestedList = document.getElementById('modalSuggestedList');
+
+      if (modalProjectName) modalProjectName.textContent = projVal || "-";
+
+      if (suggestedList && availableProjects.length > 0) {
+        suggestedList.innerHTML = '';
+        availableProjects.slice(0, 5).forEach(p => {
+          const code = p.project_code || p.code || p.id || p.name;
+          const name = p.project_name || p.name || code;
+          const item = document.createElement('div');
+          item.className = 'suggested-item';
+          item.innerHTML = `<span><strong>${name}</strong> <small style="color:#64748B;">(${code})</small></span> <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i>`;
+          item.onclick = () => selectSuggestedProject(code);
+          suggestedList.appendChild(item);
+        });
+        if (suggestedBox) suggestedBox.style.display = 'block';
+      } else if (suggestedBox) {
+        suggestedBox.style.display = 'none';
+      }
+
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeProjectModal() {
+      const modal = document.getElementById('projectNotFoundModal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    function editProjectInput() {
+      closeProjectModal();
+      const input = document.getElementById('projectCode');
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }
+
+    function proceedWithCustomProject() {
+      isProjectConfirmed = true;
+      closeProjectModal();
+      const input = document.getElementById('projectCode');
+      const val = input ? input.value.trim() : '';
+      const hint = document.getElementById("projectStatusHint");
+      const hintText = document.getElementById("projectHintText");
+      if (hint && hintText) {
+        hint.className = "field-hint valid";
+        hintText.innerHTML = `<i class="fa-solid fa-circle-check"></i> ยืนยันใช้รหัสโครงการ "${val}" สำหรับระบบ ERPNext`;
+      }
+      showToast("ยืนยันใช้รหัสโครงการที่ระบุเรียบร้อย", "info");
+    }
+
+    function selectSuggestedProject(code) {
+      const input = document.getElementById('projectCode');
+      if (input) {
+        input.value = code;
+        isProjectConfirmed = false;
+        validateProjectInput(false);
+      }
+      closeProjectModal();
+      showToast(`เลือกโครงการ ${code} เรียบร้อย`, "success");
+    }
+
+    function checkProjectManual(forceOpenModal = false) {
+      const input = document.getElementById('projectCode');
+      const val = input ? input.value.trim() : '';
+      if (!val) {
+        showToast("กรุณากรอกรหัสหรือชื่อโครงการก่อนตรวจสอบ", "info");
+        if (input) input.focus();
+        return;
+      }
+      const match = findMatchingProject(val);
+      if (match) {
+        validateProjectInput(false);
+        showToast(`✅ พบโครงการ "${match.project_name || match.name}" ในระบบ ERPNext`, "success");
+      } else {
+        showProjectWarningModal(val);
       }
     }
 
@@ -413,15 +666,12 @@
     }
 
     function mockLoadActiveProjects() {
-      const select = document.getElementById("projectCode");
-      if (select) {
-        select.innerHTML = `
-          <option value="">-- ไม่ระบุ / เลือกโครงการ (ถ้ามี) --</option>
-          <option value="PROJ001">โครงการสนับสนุนวิสาหกิจชุมชน (PROJ001)</option>
-          <option value="PROJ002">โครงการพัฒนาทักษะดิจิทัล (PROJ002)</option>
-          <option value="PROJ003">โครงการรักษ์โลกคาร์บอนต่ำ (PROJ003)</option>
-        `;
-      }
+      availableProjects = [
+        { project_code: "PROJ001", project_name: "โครงการสนับสนุนวิสาหกิจชุมชน", status: "Active" },
+        { project_code: "PROJ002", project_name: "โครงการพัฒนาทักษะดิจิทัล", status: "Active" },
+        { project_code: "PROJ003", project_name: "โครงการรักษ์โลกคาร์บอนต่ำ", status: "Active" }
+      ];
+      populateProjectDatalist();
     }
 
     // Main Initialization
@@ -518,7 +768,6 @@
 
     // Fetch Active Projects from n8n Webhook (เฉพาะที่ status = Active)
     async function loadActiveProjects() {
-      const select = document.getElementById("projectCode");
       const retryBox = document.getElementById("projectRetryBox");
       if (retryBox) retryBox.innerHTML = "";
 
@@ -527,7 +776,6 @@
         if (!res.ok) throw new Error("HTTP Status " + res.status);
 
         const responseData = await res.json();
-        select.innerHTML = '<option value="">-- ไม่ระบุ / เลือกโครงการ (ถ้ามี) --</option>';
 
         // Extract array from responseData (handles [], { data: [] }, { result: [] }, { projects: [] })
         let projectList = [];
@@ -546,22 +794,11 @@
         // Filter and populate active projects
         if (projectList.length > 0) {
           const activeProjects = projectList.filter(p => p.status === undefined || p.status === "Active" || p.status === "active" || p.is_active === true);
-          const displayList = activeProjects.length > 0 ? activeProjects : projectList;
-
-          displayList.forEach(p => {
-            const opt = document.createElement("option");
-            const code = p.project_code || p.code || p.id || p.name;
-            const name = p.project_name || p.name || code;
-            opt.value = code;
-            opt.textContent = `${name} (${code})`;
-            select.appendChild(opt);
-          });
-        } else {
-          select.innerHTML = '<option value="">-- ไม่พบรายการโครงการในขณะนี้ --</option>';
+          availableProjects = activeProjects.length > 0 ? activeProjects : projectList;
+          populateProjectDatalist();
         }
       } catch (err) {
         console.error("Unable to load projects from n8n backend:", err);
-        select.innerHTML = '<option value="">❌ เกิดข้อผิดพลาดในการโหลดรายการโครงการ</option>';
         if (retryBox) {
           retryBox.innerHTML = `<button type="button" class="btn-retry-project" onclick="loadActiveProjects()"><i class="fa-solid fa-rotate-right"></i> ลองโหลดรายการโครงการอีกครั้ง</button>`;
         }
@@ -605,9 +842,37 @@
         el.addEventListener('input', () => removeFieldError(id, `${id}Error`));
       }
     });
-    const pdpaElem = document.getElementById('pdpaConsent');
-    if (pdpaElem) {
-      pdpaElem.addEventListener('change', () => removeFieldError('pdpaBox', 'pdpaError'));
+    const pdpaScroll = document.getElementById('pdpaScrollBody');
+    if (pdpaScroll) {
+      pdpaScroll.addEventListener('scroll', () => {
+        if (pdpaScroll.scrollTop + pdpaScroll.clientHeight >= pdpaScroll.scrollHeight - 10) {
+          const scrollEnd = document.getElementById('pdpaScrollEnd');
+          if (scrollEnd) {
+            scrollEnd.style.background = '#DCFCE7';
+            scrollEnd.style.color = '#15803D';
+          }
+        }
+      });
+    }
+
+    const projInput = document.getElementById('projectCode');
+    if (projInput) {
+      projInput.addEventListener('input', () => {
+        isProjectConfirmed = false;
+        validateProjectInput(false);
+      });
+      projInput.addEventListener('blur', () => {
+        const val = projInput.value.trim();
+        if (val && !findMatchingProject(val) && !isProjectConfirmed && availableProjects.length > 0) {
+          showProjectWarningModal(val);
+        }
+      });
+      projInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          checkProjectManual(true);
+        }
+      });
     }
 
     // Submit Registration Form
@@ -656,15 +921,18 @@
         hasError = true;
       }
 
-      // Unhappy Case 5: Validate PDPA Consent Checkbox
-      const pdpaConsent = document.getElementById("pdpaConsent").checked;
-      if (!pdpaConsent) {
-        showFieldError("pdpaBox", "pdpaError", "กรุณากดยินยอมนโยบายความเป็นส่วนตัว (PDPA) ก่อนทำการลงทะเบียน");
+      // Unhappy Case 5: Validate PDPA Consent
+      const pdpaVal = document.getElementById("pdpaConsentVal").value;
+      if (pdpaVal !== "1") {
+        const errMsg = pdpaVal === "0"
+          ? "ท่านเลือกไม่ยินยอมนโยบาย PDPA (จำเป็นต้องยินยอมเพื่อลงทะเบียน)"
+          : "กรุณาเลื่อนอ่านและกดยินยอมนโยบาย PDPA ก่อนลงทะเบียน";
+        showFieldError("pdpaBox", "pdpaError", errMsg);
         hasError = true;
       }
 
       if (hasError) {
-        if (!pdpaConsent) {
+        if (pdpaVal !== "1") {
           showToast("⚠️ กรุณากดยินยอมนโยบายความเป็นส่วนตัว (PDPA) ก่อนลงทะเบียน", "error");
           const pdpaBox = document.getElementById("pdpaBox");
           if (pdpaBox) {
@@ -685,7 +953,17 @@
         return;
       }
 
+      // Check Project Validation against ERPNext
+      const rawProjectVal = document.getElementById("projectCode").value.trim();
+      if (rawProjectVal && availableProjects.length > 0 && !findMatchingProject(rawProjectVal) && !isProjectConfirmed) {
+        showProjectWarningModal(rawProjectVal);
+        return;
+      }
+
       let lineDisplayName = document.getElementById("lineDisplayName").value || fullName;
+      const matchedProj = findMatchingProject(rawProjectVal);
+      const projCodeToSend = matchedProj ? (matchedProj.project_code || matchedProj.code || matchedProj.name) : rawProjectVal;
+      const displayProjText = matchedProj ? `${matchedProj.project_name || matchedProj.name} (${matchedProj.project_code || matchedProj.code})` : (rawProjectVal || "-");
 
       // Check if mockup/mock mode is active
       if (isMockMode) {
@@ -707,8 +985,7 @@
             showToast("ลงทะเบียนสำเร็จเรียบร้อย! (Mock)", "success");
             document.getElementById("recFullName").textContent = document.getElementById("fullName").value.trim();
             document.getElementById("recPhone").textContent = document.getElementById("phone").value;
-            const projSelect = document.getElementById("projectCode");
-            document.getElementById("recProject").textContent = projSelect.options[projSelect.selectedIndex] ? projSelect.options[projSelect.selectedIndex].text : "-";
+            document.getElementById("recProject").textContent = displayProjText;
             document.getElementById("recDate").textContent = new Date().toLocaleDateString('th-TH', {
               year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
             });
@@ -721,7 +998,7 @@
             
             document.getElementById("existFullName").textContent = inputName || "สมชาย ใจดี (Mock Profile)";
             document.getElementById("existPhone").textContent = inputPhone || "089-123-4567";
-            document.getElementById("existProject").textContent = "โครงการพัฒนาทักษะดิจิทัล (PROJ002)";
+            document.getElementById("existProject").textContent = displayProjText !== "-" ? displayProjText : "โครงการพัฒนาทักษะดิจิทัล (PROJ002)";
             
             document.getElementById("existNameRow").style.display = "flex";
             document.getElementById("existPhoneRow").style.display = "flex";
@@ -776,8 +1053,8 @@
         phone: rawPhone,
         email: emailVal,
         company: document.getElementById("company").value.trim(),
-        project: document.getElementById("projectCode").value,
-        project_code: document.getElementById("projectCode").value,
+        project: projCodeToSend,
+        project_code: projCodeToSend,
         pdpa_consent: pdpaConsent ? 1 : 0, // Check field in Frappe maps to 1 (true) or 0 (false)
         pdpa_consent_datetime: nowIso,
         registration_date: registrationDate, // Matches Mandatory 'registration_date' Date field in DocType
@@ -849,9 +1126,7 @@
           // Populate Receipt Screen
           document.getElementById("recFullName").textContent = payload.full_name;
           document.getElementById("recPhone").textContent = document.getElementById("phone").value;
-
-          const projSelect = document.getElementById("projectCode");
-          document.getElementById("recProject").textContent = projSelect.options[projSelect.selectedIndex] ? projSelect.options[projSelect.selectedIndex].text : payload.project_code;
+          document.getElementById("recProject").textContent = displayProjText;
 
           document.getElementById("recDate").textContent = new Date().toLocaleDateString('th-TH', {
             year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
