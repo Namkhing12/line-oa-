@@ -102,27 +102,28 @@
           <!-- Company (ชื่อบริษัท / ร้านค้า) -->
           <div class="form-group">
             <label class="form-label" for="company">
-              <i class="fa-regular fa-building"></i> บริษัท / องค์กร (ถ้ามี)
+              <i class="fa-regular fa-building"></i> บริษัท / องค์กร <span class="required">*</span>
             </label>
             <div class="input-wrapper">
-              <input type="text" id="company" class="form-control" placeholder="">
+              <input type="text" id="company" class="form-control" required placeholder="กรอกชื่อบริษัท หรือชื่อองค์กร / ร้านค้า">
               <i class="fa-solid fa-building input-icon"></i>
             </div>
+            <div class="error-msg" id="companyError"><i class="fa-solid fa-circle-exclamation"></i>
+              <span>กรุณากรอกชื่อบริษัท / องค์กร</span></div>
           </div>
 
           <!-- โครงการ / รหัสโปรเจกต์ (ให้กรอกเอง สำหรับ map กับ ERPNext) -->
           <div class="form-group">
             <label class="form-label" for="projectCode">
-              <i class="fa-solid fa-diagram-project"></i> โครงการ / รหัสโปรเจกต์ (ERPNext Project) (ถ้ามี)
+              <i class="fa-solid fa-diagram-project"></i> โครงการ / รหัสโปรเจกต์ (ERPNext Project) <span class="required">*</span>
             </label>
             <div class="input-wrapper">
-              <input type="text" id="projectCode" list="projectSuggestions" class="form-control" placeholder="พิมพ์ชื่อหรือรหัสโครงการ (เช่น PROJ001)..." autocomplete="off">
+              <input type="text" id="projectCode" list="projectSuggestions" class="form-control" required placeholder="พิมพ์ชื่อหรือรหัสโครงการ (เช่น PROJ001)..." autocomplete="off">
               <datalist id="projectSuggestions"></datalist>
               <i class="fa-solid fa-folder-tree input-icon"></i>
-              <button type="button" id="btnVerifyProject" class="btn-input-action" onclick="checkProjectManual(true)" title="ตรวจสอบโครงการกับ ERPNext">
-                <i class="fa-solid fa-magnifying-glass"></i>
-              </button>
             </div>
+            <div class="error-msg" id="projectCodeError"><i class="fa-solid fa-circle-exclamation"></i>
+              <span>กรุณาระบุรหัสหรือชื่อโครงการ (ERPNext Project)</span></div>
             <div class="field-hint" id="projectStatusHint">
               <span id="projectHintText"><i class="fa-solid fa-circle-info"></i> สามารถพิมพ์ระบุรหัสหรือชื่อโครงการที่ตรงกับระบบ ERPNext ได้</span>
             </div>
@@ -836,7 +837,7 @@
     }
 
     // Attach Real-time Error Clearing Event Listeners
-    ['fullName', 'phone', 'email'].forEach(id => {
+    ['fullName', 'phone', 'email', 'company', 'projectCode'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
         el.addEventListener('input', () => removeFieldError(id, `${id}Error`));
@@ -921,7 +922,21 @@
         hasError = true;
       }
 
-      // Unhappy Case 5: Validate PDPA Consent
+      // Unhappy Case 5: Validate Company / Organization
+      const companyVal = document.getElementById("company").value.trim();
+      if (!companyVal || companyVal.length < 2) {
+        showFieldError("company", "companyError", "กรุณากรอกชื่อบริษัท / องค์กร");
+        hasError = true;
+      }
+
+      // Unhappy Case 6: Validate Project Code / Name
+      const rawProjectVal = document.getElementById("projectCode").value.trim();
+      if (!rawProjectVal) {
+        showFieldError("projectCode", "projectCodeError", "กรุณาระบุรหัสหรือชื่อโครงการ (ERPNext Project)");
+        hasError = true;
+      }
+
+      // Unhappy Case 7: Validate PDPA Consent
       const pdpaVal = document.getElementById("pdpaConsentVal").value;
       if (pdpaVal !== "1") {
         const errMsg = pdpaVal === "0"
@@ -939,24 +954,23 @@
             pdpaBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
         } else {
-          showToast("กรุณากรอกข้อมูลให้ถูกต้องตามช่องที่มีสัญลักษณ์เตือน", "error");
+          showToast("กรุณากรอกข้อมูลให้ครบถ้วนทุกช่องตามที่มีเครื่องหมาย *", "error");
         }
         return;
       }
 
-      // Unhappy Case 6: Determine LINE User ID (ต้องมีค่าจาก LINE Profile)
+      // Check Project Validation against ERPNext (if not confirmed yet)
+      if (rawProjectVal && availableProjects.length > 0 && !findMatchingProject(rawProjectVal) && !isProjectConfirmed) {
+        showProjectWarningModal(rawProjectVal);
+        return;
+      }
+
+      // Unhappy Case 8: Determine LINE User ID (ต้องมีค่าจาก LINE Profile)
       let lineUserId = document.getElementById("lineUserId").value;
       if (!lineUserId) {
         showToast("กรุณาเข้าสู่ระบบ LINE ก่อนทำการลงทะเบียน", "error");
         showGlobalBanner("ไม่พบข้อมูล LINE Account กรุณากดปุ่มเพื่อเข้าสู่ระบบ LINE", "warning", `<button type="button" class="btn-line-login" onclick="triggerLineLogin()"><i class="fa-brands fa-line"></i> เข้าสู่ระบบ LINE</button>`);
         triggerLineLogin();
-        return;
-      }
-
-      // Check Project Validation against ERPNext
-      const rawProjectVal = document.getElementById("projectCode").value.trim();
-      if (rawProjectVal && availableProjects.length > 0 && !findMatchingProject(rawProjectVal) && !isProjectConfirmed) {
-        showProjectWarningModal(rawProjectVal);
         return;
       }
 
