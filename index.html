@@ -263,8 +263,8 @@
       <div class="success-icon-wrap">
         <i class="fa-solid fa-circle-check"></i>
       </div>
-      <h2>ลงทะเบียนสำเร็จ!</h2>
-      <p>ข้อมูลของคุณได้รับการบันทึกในระบบเรียบร้อยแล้ว</p>
+      <h2 id="successTitle">ลงทะเบียนสำเร็จ!</h2>
+      <p id="successSubtext">ข้อมูลของคุณได้รับการบันทึกในระบบเรียบร้อยแล้ว</p>
 
       <div class="receipt-box">
         <div class="receipt-row">
@@ -296,7 +296,7 @@
         <i class="fa-solid fa-user-check"></i>
       </div>
       <h2>ท่านเคยลงทะเบียนแล้ว!</h2>
-      <p id="alreadyRegisteredMsg">บัญชี LINE หรือเบอร์โทรศัพท์นี้เคยเปิดใช้งานในระบบแล้ว</p>
+      <p id="alreadyRegisteredMsg">บัญชี LINE หรือเบอร์โทรศัพท์นี้เคยเปิดใช้งานในระบบแล้ว ท่านสามารถอัปเดตข้อมูลให้เป็นปัจจุบันได้</p>
 
       <div class="receipt-box warning-box">
         <div class="receipt-row">
@@ -318,11 +318,11 @@
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button type="button" class="btn-status-light" onclick="showFormView()">
+          <i class="fa-solid fa-pen-to-square"></i> อัปเดต / แก้ไขข้อมูลลงทะเบียน
+        </button>
         <button class="btn-status-dark" onclick="closeLiffWindow()">
           <i class="fa-solid fa-comment"></i> กลับสู่แชท LINE
-        </button>
-        <button type="button" class="btn-status-light" onclick="showFormView()">
-          <i class="fa-solid fa-arrow-left"></i> กลับสู่หน้ากรอกข้อมูล
         </button>
       </div>
     </div>
@@ -1055,6 +1055,7 @@
 
       const nowIso = new Date().toISOString();
       const payload = {
+        action: "upsert", // Upsert pattern: Insert if new, Update if already exists
         line_user_id: lineUserId,
         line_display_name: lineDisplayName,
         line_picture_url: document.getElementById("linePictureUrl").value,
@@ -1066,7 +1067,7 @@
         project_code: projCodeToSend,
         pdpa_consent: 1,
         pdpa_consent_datetime: nowIso,
-        registration_date: registrationDate,
+        registration_date: registrationDate, // Mandatory field for ERPNext DocType LineOA Contact
         platform: (typeof liff !== "undefined" && liff.isInClient && liff.isInClient()) ? "MOBILE_LIFF" : "DESKTOP_WEB",
         registered_at: nowIso
       };
@@ -1088,7 +1089,10 @@
 
         const isJsonFailure = resJson && (resJson.success === false || resJson.status === 'error' || resJson.status === 'failed');
 
-        // Unhappy Case Evaluation: Check if user/phone/LINE ID already registered
+        // Check if response indicates an update (Upsert) or existing member handling
+        const isUpdated = resJson && (resJson.action === 'update' || resJson.is_updated === true || resJson.status === 'updated' || resJson.status === 'upserted');
+
+        // Unhappy Case Evaluation: Check if user/phone/LINE ID duplicate error (if backend throws error instead of upserting)
         const isDuplicate = response.status === 409 ||
           (resJson && (
             resJson.is_registered === true ||
@@ -1096,29 +1100,29 @@
             resJson.exists === true ||
             resJson.status === 'duplicate' ||
             resJson.status === 'already_registered' ||
-            resJson.code === 'ALREADY_EXISTS' ||
-            (resJson.message && /ลงทะเบียนแล้ว|มีบัญชี|already|duplicate/i.test(resJson.message)) ||
-            (resJson.error && /ลงทะเบียนแล้ว|มีบัญชี|already|duplicate/i.test(resJson.error))
+            resJson.code === 'ALREADY_EXISTS'
           ));
 
         if (isDuplicate) {
-          // Unhappy Case: มีบัญชีอยู่แล้ว (Already Registered)
+          // มีบัญชีอยู่แล้วในระบบ (Already Registered) -> แสดงหน้ารายละเอียดเดิมพร้อมปุ่มกดอัปเดตข้อมูล
           const existMsg = (resJson && (resJson.message || resJson.detail))
             ? (resJson.message || resJson.detail)
-            : "บัญชี LINE หรือเบอร์โทรศัพท์นี้ได้ลงทะเบียนไว้ในระบบเรียบร้อยแล้ว";
+            : "บัญชี LINE หรือเบอร์โทรศัพท์นี้ได้ลงทะเบียนไว้ในระบบเรียบร้อยแล้ว ท่านสามารถกดปุ่มเพื่ออัปเดตข้อมูลได้";
 
-          showToast("⚠️ ท่านได้ลงทะเบียนสมาชิกในระบบเรียบร้อยแล้ว", "info");
+          showToast("ℹ️ ท่านมีข้อมูลลงทะเบียนอยู่ในระบบแล้ว สามารถอัปเดตข้อมูลได้", "info");
 
           const existNameRow = document.getElementById("existNameRow");
           const existPhoneRow = document.getElementById("existPhoneRow");
-          if (resJson && (resJson.full_name || resJson.name)) {
-            document.getElementById("existFullName").textContent = resJson.full_name || resJson.name;
-            if (existNameRow) existNameRow.style.display = "flex";
-          }
-          if (resJson && resJson.phone) {
-            document.getElementById("existPhone").textContent = resJson.phone;
-            if (existPhoneRow) existPhoneRow.style.display = "flex";
-          }
+          const existProjectRow = document.getElementById("existProjectRow");
+
+          document.getElementById("existFullName").textContent = (resJson && (resJson.full_name || resJson.name)) || fullName;
+          document.getElementById("existPhone").textContent = (resJson && resJson.phone) || document.getElementById("phone").value;
+          document.getElementById("existProject").textContent = (resJson && (resJson.project_name || resJson.project)) || displayProjText;
+
+          if (existNameRow) existNameRow.style.display = "flex";
+          if (existPhoneRow) existPhoneRow.style.display = "flex";
+          if (existProjectRow) existProjectRow.style.display = "flex";
+
           const alreadyRegMsg = document.getElementById("alreadyRegisteredMsg");
           if (alreadyRegMsg) alreadyRegMsg.textContent = existMsg;
 
@@ -1127,8 +1131,19 @@
           }, 400);
 
         } else if (response.ok && !isJsonFailure) {
-          // Happy Path: ลงทะเบียนสำเร็จ
-          showToast("ลงทะเบียนสำเร็จเรียบร้อย!", "success");
+          // Happy Path: ลงทะเบียนสำเร็จ หรือ อัปเดตข้อมูลสำเร็จ (Upsert Success)
+          const successTitle = document.getElementById("successTitle");
+          const successSubtext = document.getElementById("successSubtext");
+
+          if (isUpdated) {
+            showToast("อัปเดตข้อมูลการลงทะเบียนเรียบร้อยแล้ว!", "success");
+            if (successTitle) successTitle.textContent = "อัปเดตข้อมูลสำเร็จ!";
+            if (successSubtext) successSubtext.textContent = "ข้อมูลการลงทะเบียนของคุณในระบบ LineOA Contact และ ERPNext ได้รับการอัปเดตเป็นปัจจุบันเรียบร้อยแล้ว";
+          } else {
+            showToast("ลงทะเบียนสำเร็จเรียบร้อย!", "success");
+            if (successTitle) successTitle.textContent = "ลงทะเบียนสำเร็จ!";
+            if (successSubtext) successSubtext.textContent = "ข้อมูลของคุณได้รับการบันทึกในระบบเรียบร้อยแล้ว";
+          }
 
           // Populate Receipt Screen
           document.getElementById("recFullName").textContent = payload.full_name;
