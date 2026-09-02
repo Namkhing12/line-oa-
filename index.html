@@ -272,7 +272,7 @@
               หากคุณมีข้อสงสัยเกี่ยวกับนโยบายความเป็นส่วนตัวนี้ หรือต้องการใช้สิทธิของเจ้าของข้อมูลส่วนบุคคล สามารถติดต่อเจ้าหน้าที่หรือแอดมินผ่านช่องทาง LINE Official Account นี้ได้ตลอดเวลา</p>
 
               <div class="pdpa-scroll-end" id="pdpaScrollEnd">
-                <i class="fa-solid fa-check-double"></i> เลื่อนอ่านข้อกำหนดครบถ้วนแล้ว
+                <i class="fa-solid fa-arrow-down"></i> กรุณาเลื่อนลงเพื่ออ่านข้อกำหนดให้ครบถ้วนก่อนกดยินยอม
               </div>
             </div>
 
@@ -280,8 +280,8 @@
               <button type="button" class="btn-pdpa-choice btn-pdpa-decline" id="btnPdpaDecline" onclick="setPdpaChoice(false)">
                 <i class="fa-solid fa-xmark"></i> ไม่ยินยอม
               </button>
-              <button type="button" class="btn-pdpa-choice btn-pdpa-accept" id="btnPdpaAccept" onclick="setPdpaChoice(true)">
-                <i class="fa-solid fa-check"></i> ยินยอม
+              <button type="button" class="btn-pdpa-choice btn-pdpa-accept" id="btnPdpaAccept" onclick="setPdpaChoice(true)" disabled title="กรุณาเลื่อนอ่านนโยบายลงมาให้สุดก่อน">
+                <i class="fa-solid fa-lock"></i> ยินยอม (เลื่อนลงสุดก่อน)
               </button>
             </div>
           </div>
@@ -561,6 +561,8 @@
       }
     }
 
+    let isPdpaScrolledToBottom = false;
+
     // Set PDPA Choice (Accept = true / Decline = false)
     function setPdpaChoice(isAccepted) {
       const valInput = document.getElementById("pdpaConsentVal");
@@ -569,6 +571,12 @@
       const badge = document.getElementById("pdpaStatusBadge");
 
       if (isAccepted) {
+        if (!isPdpaScrolledToBottom) {
+          showToast("กรุณาเลื่อนอ่านนโยบาย PDPA ลงไปให้สุดก่อนกดยินยอม", "info");
+          const pdpaScroll = document.getElementById("pdpaScrollBody");
+          if (pdpaScroll) pdpaScroll.scrollTo({ top: pdpaScroll.scrollHeight, behavior: "smooth" });
+          return;
+        }
         if (valInput) valInput.value = "1";
         if (btnAccept) btnAccept.classList.add("active");
         if (btnDecline) btnDecline.classList.remove("active");
@@ -892,21 +900,40 @@
     const projInput = document.getElementById('projectCode');
     if (projInput) {
       projInput.addEventListener('input', () => {
-        isProjectConfirmed = false;
-        validateProjectInput(false);
+        validateProjectInput();
       });
-      projInput.addEventListener('blur', () => {
-        const val = projInput.value.trim();
-        if (val && !findMatchingProject(val) && !isProjectConfirmed && availableProjects.length > 0) {
-          showProjectWarningModal(val);
+    }
+
+    // Scroll Listener for PDPA Body: Unlock Accept button when scrolled to bottom
+    const pdpaScroll = document.getElementById('pdpaScrollBody');
+    if (pdpaScroll) {
+      const checkPdpaScroll = () => {
+        const isAtBottom = (pdpaScroll.scrollTop + pdpaScroll.clientHeight >= pdpaScroll.scrollHeight - 35) ||
+                           (pdpaScroll.scrollHeight <= pdpaScroll.clientHeight + 10);
+        if (isAtBottom && !isPdpaScrolledToBottom) {
+          isPdpaScrolledToBottom = true;
+          const btnAccept = document.getElementById('btnPdpaAccept');
+          if (btnAccept) {
+            btnAccept.disabled = false;
+            btnAccept.innerHTML = '<i class="fa-solid fa-check"></i> ยินยอม';
+            btnAccept.title = "กดเพื่อยินยอมนโยบาย PDPA";
+          }
+          const scrollEnd = document.getElementById('pdpaScrollEnd');
+          if (scrollEnd) {
+            scrollEnd.style.background = '#DCFCE7';
+            scrollEnd.style.color = '#15803D';
+            scrollEnd.innerHTML = '<i class="fa-solid fa-circle-check"></i> อ่านข้อกำหนดครบถ้วนแล้ว สามารถกดปุ่ม "ยินยอม" ได้';
+          }
+          const badge = document.getElementById("pdpaStatusBadge");
+          if (badge && (badge.textContent === "ยังไม่ได้เลือก" || badge.textContent === "ยังไม่ได้อ่าน")) {
+            badge.textContent = "อ่านครบแล้ว";
+            badge.className = "pdpa-badge";
+          }
         }
-      });
-      projInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          checkProjectManual(true);
-        }
-      });
+      };
+
+      pdpaScroll.addEventListener('scroll', checkPdpaScroll);
+      setTimeout(checkPdpaScroll, 400);
     }
 
     // Step 1: Validate Information and Go to PDPA Step 2
