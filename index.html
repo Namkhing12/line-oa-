@@ -438,7 +438,14 @@
 
     let isSubmitting = false;
     let isMockMode = false;
-    let availableProjects = [];
+    let availableProjects = [
+      { project_code: "PROJ-INT-0005", project_name: "โครงการบูรณาการระบบ ERPNext", status: "Active" },
+      { project_code: "PROJ-INT-0001", project_name: "โครงการพัฒนาระบบ LINE OA", status: "Active" },
+      { project_code: "PROJ-INT-0002", project_name: "โครงการเชื่อมต่อ Helpdesk Ticket", status: "Active" },
+      { project_code: "PROJ001", project_name: "โครงการสนับสนุนวิสาหกิจชุมชน", status: "Active" },
+      { project_code: "PROJ002", project_name: "โครงการพัฒนาทักษะดิจิทัล", status: "Active" },
+      { project_code: "PROJ003", project_name: "โครงการรักษ์โลกคาร์บอนต่ำ", status: "Active" }
+    ];
     let isProjectConfirmed = false;
 
     // Toast Notification helper
@@ -455,7 +462,7 @@
       if (type === 'success') {
         toastIcon.className = 'fa-solid fa-circle-check';
       } else if (type === 'error') {
-        toastIcon.className = 'fa-solid fa-circle-exclamation';
+        toastIcon.className = 'fa-solid fa-circle-xmark';
       } else {
         toastIcon.className = 'fa-solid fa-circle-info';
       }
@@ -571,10 +578,23 @@
     function findMatchingProject(query) {
       if (!query || !availableProjects.length) return null;
       const q = query.trim().toLowerCase();
+      const qClean = q.replace(/[\s\-_]/g, "");
+
       return availableProjects.find(p => {
         const code = (p.project_code || p.code || p.id || p.name || '').toLowerCase();
         const name = (p.project_name || p.name || '').toLowerCase();
-        return code === q || name === q || `${name} (${code})`.toLowerCase() === q;
+        const codeClean = code.replace(/[\s\-_]/g, "");
+        const nameClean = name.replace(/[\s\-_]/g, "");
+
+        return (
+          code === q ||
+          name === q ||
+          `${name} (${code})`.toLowerCase() === q ||
+          (qClean.length >= 3 && codeClean === qClean) ||
+          (qClean.length >= 3 && nameClean === qClean) ||
+          (code && q.length >= 4 && code.includes(q)) ||
+          (name && q.length >= 4 && name.includes(q))
+        );
       }) || null;
     }
 
@@ -748,6 +768,9 @@
 
     function mockLoadActiveProjects() {
       availableProjects = [
+        { project_code: "PROJ-INT-0005", project_name: "โครงการบูรณาการระบบ ERPNext", status: "Active" },
+        { project_code: "PROJ-INT-0001", project_name: "โครงการพัฒนาระบบ LINE OA", status: "Active" },
+        { project_code: "PROJ-INT-0002", project_name: "โครงการเชื่อมต่อ Helpdesk Ticket", status: "Active" },
         { project_code: "PROJ001", project_name: "โครงการสนับสนุนวิสาหกิจชุมชน", status: "Active" },
         { project_code: "PROJ002", project_name: "โครงการพัฒนาทักษะดิจิทัล", status: "Active" },
         { project_code: "PROJ003", project_name: "โครงการรักษ์โลกคาร์บอนต่ำ", status: "Active" }
@@ -858,10 +881,12 @@
 
         const responseData = await res.json();
 
-        // Extract array from responseData (handles [], { data: [] }, { result: [] }, { projects: [] })
+        // Extract array from responseData (handles ERPNext Frappe message, data, result, projects)
         let projectList = [];
         if (Array.isArray(responseData)) {
           projectList = responseData;
+        } else if (responseData && Array.isArray(responseData.message)) {
+          projectList = responseData.message;
         } else if (responseData && Array.isArray(responseData.data)) {
           projectList = responseData.data;
         } else if (responseData && Array.isArray(responseData.projects)) {
@@ -872,10 +897,20 @@
           projectList = [responseData];
         }
 
-        // Filter and populate active projects
+        // Filter and populate active/open projects from ERPNext
         if (projectList.length > 0) {
-          const activeProjects = projectList.filter(p => p.status === undefined || p.status === "Active" || p.status === "active" || p.is_active === true);
-          availableProjects = activeProjects.length > 0 ? activeProjects : projectList;
+          const formattedProjects = projectList.map(p => ({
+            project_code: p.project_code || p.name || p.code || p.id,
+            project_name: p.project_name || p.title || p.name || p.project_code || p.id,
+            status: p.status || "Active"
+          }));
+
+          const activeProjects = formattedProjects.filter(p => {
+            const st = String(p.status || "").toLowerCase();
+            return !st || st === "open" || st === "active" || st === "in progress" || st === "completed";
+          });
+
+          availableProjects = activeProjects.length > 0 ? activeProjects : formattedProjects;
           populateProjectDatalist();
         }
       } catch (err) {
