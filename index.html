@@ -568,13 +568,17 @@
     function handlePdpaCheckboxChange(checkbox) {
       const valInput = document.getElementById("pdpaConsentVal");
       const badge = document.getElementById("pdpaStatusBadge");
+      const pdpaScroll = document.getElementById("pdpaScrollBody");
 
       if (checkbox.checked) {
         if (!isPdpaScrolledToBottom) {
           checkbox.checked = false;
-          showToast("กรุณาเลื่อนอ่านนโยบาย PDPA ลงไปให้สุดก่อนติ๊กยินยอม", "info");
-          const pdpaScroll = document.getElementById("pdpaScrollBody");
-          if (pdpaScroll) pdpaScroll.scrollTo({ top: pdpaScroll.scrollHeight, behavior: "smooth" });
+          showToast("⚠️ ท่านจำเป็นต้องเลื่อนอ่านข้อกำหนดนโยบาย PDPA จนถึงบรรทัดสุดท้ายก่อนจึงจะติ๊กยินยอมได้", "error");
+          if (pdpaScroll) {
+            pdpaScroll.classList.add("scroll-warning");
+            setTimeout(() => pdpaScroll.classList.remove("scroll-warning"), 1500);
+            pdpaScroll.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
           return;
         }
         if (valInput) valInput.value = "1";
@@ -909,8 +913,12 @@
     const pdpaScroll = document.getElementById('pdpaScrollBody');
     if (pdpaScroll) {
       const checkPdpaScroll = () => {
-        const isAtBottom = (pdpaScroll.scrollTop + pdpaScroll.clientHeight >= pdpaScroll.scrollHeight - 35) ||
-                           (pdpaScroll.scrollHeight <= pdpaScroll.clientHeight + 10);
+        // Only evaluate if element is actually visible and rendering in layout
+        if (pdpaScroll.clientHeight === 0 || pdpaScroll.scrollHeight === 0) return;
+
+        // Strict calculation: Must scroll down so that scrollTop + clientHeight reaches scrollHeight - 20
+        const isAtBottom = (pdpaScroll.scrollTop + pdpaScroll.clientHeight >= pdpaScroll.scrollHeight - 20);
+
         if (isAtBottom && !isPdpaScrolledToBottom) {
           isPdpaScrolledToBottom = true;
           const checkbox = document.getElementById('pdpaCheckbox');
@@ -926,18 +934,18 @@
           if (scrollEnd) {
             scrollEnd.style.background = '#DCFCE7';
             scrollEnd.style.color = '#15803D';
-            scrollEnd.innerHTML = '<i class="fa-solid fa-circle-check"></i> อ่านข้อกำหนดครบถ้วนแล้ว ท่านสามารถติ๊กช่องยินยอมด้านล่างได้';
+            scrollEnd.innerHTML = '<i class="fa-solid fa-circle-check"></i> เลื่อนอ่านครบถ้วนแล้ว! ท่านสามารถติ๊กช่องยินยอมด้านล่างได้';
           }
           const badge = document.getElementById("pdpaStatusBadge");
-          if (badge && (badge.textContent === "ยังไม่ได้เลือก" || badge.textContent === "ยังไม่ได้อ่าน")) {
+          if (badge && badge.value !== "1") {
             badge.textContent = "อ่านครบแล้ว (พร้อมติ๊กยินยอม)";
             badge.className = "pdpa-badge";
           }
+          showToast("✅ อ่านข้อกำหนดครบถ้วนแล้ว ท่านสามารถติ๊กช่องยินยอมด้านล่างได้", "success");
         }
       };
 
       pdpaScroll.addEventListener('scroll', checkPdpaScroll);
-      setTimeout(checkPdpaScroll, 400);
     }
 
     // Step 1: Validate Information and Go to PDPA Step 2
@@ -1003,6 +1011,28 @@
       if (sumCompany) sumCompany.textContent = companyVal;
       const sumProject = document.getElementById("sumProject");
       if (sumProject) sumProject.textContent = displayProjText;
+
+      // Reset PDPA scroll & lock checkbox state until user actually scrolls down
+      isPdpaScrolledToBottom = false;
+      const checkbox = document.getElementById('pdpaCheckbox');
+      const checkboxCard = document.getElementById('pdpaCheckboxCard');
+      const valInput = document.getElementById("pdpaConsentVal");
+      const badge = document.getElementById("pdpaStatusBadge");
+      const pdpaScrollEl = document.getElementById("pdpaScrollBody");
+
+      if (checkbox) {
+        checkbox.checked = false;
+        checkbox.disabled = true;
+      }
+      if (valInput) valInput.value = "0";
+      if (checkboxCard) checkboxCard.classList.remove('unlocked');
+      if (badge) {
+        badge.textContent = "ยังไม่ได้อ่าน (เลื่อนลงสุด)";
+        badge.className = "pdpa-badge declined";
+      }
+      if (pdpaScrollEl) {
+        pdpaScrollEl.scrollTop = 0;
+      }
 
       // Navigate to Step 2
       showView("pdpaView");

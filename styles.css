@@ -498,13 +498,26 @@ textarea.form-control {
   height: 240px;
   overflow-y: auto;
   background: white;
-  border: 1px solid #CBD5E1;
+  border: 1.5px solid #CBD5E1;
   border-radius: 10px;
   padding: 14px 16px;
   font-size: 12.5px;
   color: #475569;
   line-height: 1.65;
   scroll-behavior: smooth;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.pdpa-scroll-body.scroll-warning {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25) !important;
+  animation: shake 0.4s ease-in-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
 }
 
 .pdpa-scroll-body::-webkit-scrollbar {
