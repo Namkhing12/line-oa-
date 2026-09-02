@@ -31,17 +31,30 @@
   <!-- Vertical Card Container -->
   <div class="app-container">
 
-    <!-- Registration Form View -->
+    <!-- Registration Form View (Step 1) -->
     <div id="formView">
       <div class="header">
         <div class="header-logo">
           <i class="fa-brands fa-line"></i>
         </div>
         <h1>ลงทะเบียนสมาชิก LINE OA</h1>
-        <p>กรอกข้อมูลเพื่อเปิดใช้งานและรับสิทธิประโยชน์</p>
+        <p>ขั้นตอนที่ 1 จาก 2: กรอกข้อมูลส่วนตัว</p>
       </div>
 
       <div class="form-wrapper">
+
+        <!-- Step Progress Indicator -->
+        <div class="step-indicator-bar">
+          <div class="step-item active">
+            <span class="step-circle">1</span>
+            <span>ข้อมูลส่วนตัว</span>
+          </div>
+          <div class="step-divider"></div>
+          <div class="step-item">
+            <span class="step-circle">2</span>
+            <span>นโยบาย PDPA</span>
+          </div>
+        </div>
 
         <!-- Global Alert Banner for Critical Unhappy Cases -->
         <div id="globalErrorBanner" class="alert-banner">
@@ -54,7 +67,7 @@
               class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <form id="regForm" novalidate>
+        <form id="regForm" onsubmit="event.preventDefault(); goToPdpaStep();" novalidate>
           <!-- Hidden Inputs for LINE Credentials -->
           <input type="hidden" id="lineUserId" value="">
           <input type="hidden" id="lineDisplayName" value="">
@@ -130,51 +143,118 @@
             <div id="projectRetryBox"></div>
           </div>
 
-          <!-- PDPA Consent Box (เลื่อนอ่านข้อกำหนด และกดยินยอม หรือ ไม่ยินยอม) -->
-          <div class="pdpa-box" id="pdpaBox">
-            <div class="pdpa-scroll-card">
-              <div class="pdpa-scroll-header">
-                <span><i class="fa-solid fa-shield-halved" style="color: var(--line-green);"></i> นโยบายความเป็นส่วนตัว (PDPA) <span class="required">*</span></span>
-                <span class="pdpa-badge" id="pdpaStatusBadge">ยังไม่ได้เลือก</span>
-              </div>
+          <!-- Next Button to PDPA Step -->
+          <button type="button" id="nextToPdpaBtn" class="btn-submit" onclick="goToPdpaStep()">
+            <span>ถัดไป: ตรวจสอบนโยบาย PDPA</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </form>
+      </div>
+    </div>
 
-              <div class="pdpa-scroll-body" id="pdpaScrollBody">
-                <p><strong>1. วัตถุประสงค์การจัดเก็บและใช้งานข้อมูลส่วนบุคคล</strong></p>
-                <p>ทางบริษัทและผู้ให้บริการจัดเก็บข้อมูลส่วนบุคคล ได้แก่ ชื่อ-นามสกุล, เบอร์โทรศัพท์, อีเมล, ข้อมูลบัญชี LINE และชื่อองค์กร เพื่อใช้ในการยืนยันตัวตน ให้บริการ ส่งข้อมูลสิทธิประโยชน์ และเชื่อมโยงข้อมูลกับระบบ ERPNext</p>
-                
-                <p><strong>2. ความปลอดภัยและระยะเวลาการจัดเก็บ</strong></p>
-                <p>ข้อมูลของท่านจะได้รับการปกป้องตามมาตรฐานความปลอดภัยทางอิเล็กทรอนิกส์ มีการควบคุมสิทธิ์การเข้าถึงอย่างรัดกุม และเก็บรักษาไว้ตามระยะเวลาที่จำเป็นต่อการให้บริการตามวัตถุประสงค์</p>
-                
-                <p><strong>3. สิทธิ์ของเจ้าของข้อมูลส่วนบุคคล</strong></p>
-                <p>ท่านสามารถขอเข้าถึง ตรวจสอบ ขอแก้ไขให้ถูกต้อง หรือขอให้ระงับ/ลบข้อมูลส่วนบุคคลของท่านได้ทุกเมื่อ ผ่านช่องทางแอดมิน LINE Official Account</p>
-                
-                <div class="pdpa-scroll-end" id="pdpaScrollEnd">
-                  <i class="fa-solid fa-check-double"></i> เลื่อนอ่านข้อกำหนดครบถ้วนแล้ว
-                </div>
-              </div>
+    <!-- PDPA Consent Step View (Step 2) -->
+    <div id="pdpaView" style="display: none;">
+      <div class="header">
+        <div class="header-logo">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h1>นโยบายความเป็นส่วนตัว (PDPA)</h1>
+        <p>ขั้นตอนที่ 2 จาก 2: ตรวจสอบข้อกำหนดและยืนยันการลงทะเบียน</p>
+      </div>
 
-              <div class="pdpa-choice-actions">
-                <button type="button" class="btn-pdpa-choice btn-pdpa-decline" id="btnPdpaDecline" onclick="setPdpaChoice(false)">
-                  <i class="fa-solid fa-xmark"></i> ไม่ยินยอม
-                </button>
-                <button type="button" class="btn-pdpa-choice btn-pdpa-accept" id="btnPdpaAccept" onclick="setPdpaChoice(true)">
-                  <i class="fa-solid fa-check"></i> ยินยอม
-                </button>
+      <div class="form-wrapper">
+        <!-- Step Progress Indicator -->
+        <div class="step-indicator-bar">
+          <div class="step-item completed" onclick="goBackToFormStep()" style="cursor: pointer;">
+            <span class="step-circle"><i class="fa-solid fa-check" style="font-size: 8px;"></i></span>
+            <span>ข้อมูลส่วนตัว</span>
+          </div>
+          <div class="step-divider active"></div>
+          <div class="step-item active">
+            <span class="step-circle">2</span>
+            <span>นโยบาย PDPA</span>
+          </div>
+        </div>
+
+        <!-- Mini Summary Card -->
+        <div class="summary-mini-card">
+          <div class="summary-header">
+            <span><i class="fa-solid fa-user-check" style="color: var(--line-green);"></i> สรุปข้อมูลผู้ลงทะเบียน</span>
+            <span style="font-size: 11.5px; color: var(--line-green-dark); cursor: pointer; font-weight: 500;" onclick="goBackToFormStep()">
+              <i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูล
+            </span>
+          </div>
+          <div class="summary-row">
+            <span>ชื่อ-นามสกุล:</span>
+            <span class="summary-val" id="sumFullName">-</span>
+          </div>
+          <div class="summary-row">
+            <span>เบอร์โทรศัพท์:</span>
+            <span class="summary-val" id="sumPhone">-</span>
+          </div>
+          <div class="summary-row">
+            <span>อีเมล:</span>
+            <span class="summary-val" id="sumEmail">-</span>
+          </div>
+          <div class="summary-row">
+            <span>บริษัท / องค์กร:</span>
+            <span class="summary-val" id="sumCompany">-</span>
+          </div>
+          <div class="summary-row">
+            <span>โครงการ:</span>
+            <span class="summary-val" id="sumProject">-</span>
+          </div>
+        </div>
+
+        <!-- PDPA Consent Box (Scroll & Choice Buttons) -->
+        <div class="pdpa-box" id="pdpaBox">
+          <div class="pdpa-scroll-card">
+            <div class="pdpa-scroll-header">
+              <span><i class="fa-solid fa-file-contract" style="color: var(--line-green);"></i> ข้อกำหนดและนโยบาย PDPA <span class="required">*</span></span>
+              <span class="pdpa-badge" id="pdpaStatusBadge">ยังไม่ได้เลือก</span>
+            </div>
+
+            <div class="pdpa-scroll-body" id="pdpaScrollBody">
+              <p><strong>1. วัตถุประสงค์การจัดเก็บและใช้งานข้อมูลส่วนบุคคล</strong></p>
+              <p>ทางบริษัทและผู้ให้บริการจัดเก็บข้อมูลส่วนบุคคล ได้แก่ ชื่อ-นามสกุล, เบอร์โทรศัพท์, อีเมล, ข้อมูลบัญชี LINE และชื่อองค์กร เพื่อใช้ในการยืนยันตัวตน ให้บริการ ส่งข้อมูลสิทธิประโยชน์ และเชื่อมโยงข้อมูลกับระบบ ERPNext</p>
+              
+              <p><strong>2. ความปลอดภัยและระยะเวลาการจัดเก็บ</strong></p>
+              <p>ข้อมูลของท่านจะได้รับการปกป้องตามมาตรฐานความปลอดภัยทางอิเล็กทรอนิกส์ มีการควบคุมสิทธิ์การเข้าถึงอย่างรัดกุม และเก็บรักษาไว้ตามระยะเวลาที่จำเป็นต่อการให้บริการตามวัตถุประสงค์</p>
+              
+              <p><strong>3. สิทธิ์ของเจ้าของข้อมูลส่วนบุคคล</strong></p>
+              <p>ท่านสามารถขอเข้าถึง ตรวจสอบ ขอแก้ไขให้ถูกต้อง หรือขอให้ระงับ/ลบข้อมูลส่วนบุคคลของท่านได้ทุกเมื่อ ผ่านช่องทางแอดมิน LINE Official Account</p>
+              
+              <div class="pdpa-scroll-end" id="pdpaScrollEnd">
+                <i class="fa-solid fa-check-double"></i> เลื่อนอ่านข้อกำหนดครบถ้วนแล้ว
               </div>
             </div>
 
-            <input type="hidden" id="pdpaConsentVal" value="">
-            <div class="error-msg" id="pdpaError" style="margin-top: 8px;">
-              <i class="fa-solid fa-circle-exclamation"></i> <span>กรุณากดยินยอมนโยบาย PDPA ก่อนลงทะเบียน</span>
+            <div class="pdpa-choice-actions">
+              <button type="button" class="btn-pdpa-choice btn-pdpa-decline" id="btnPdpaDecline" onclick="setPdpaChoice(false)">
+                <i class="fa-solid fa-xmark"></i> ไม่ยินยอม
+              </button>
+              <button type="button" class="btn-pdpa-choice btn-pdpa-accept" id="btnPdpaAccept" onclick="setPdpaChoice(true)">
+                <i class="fa-solid fa-check"></i> ยินยอม
+              </button>
             </div>
           </div>
 
-          <!-- Submit Button -->
-          <button type="submit" id="submitBtn" class="btn-submit">
+          <input type="hidden" id="pdpaConsentVal" value="">
+          <div class="error-msg" id="pdpaError" style="margin-top: 8px;">
+            <i class="fa-solid fa-circle-exclamation"></i> <span>กรุณากดยินยอมนโยบาย PDPA ก่อนลงทะเบียน</span>
+          </div>
+        </div>
+
+        <!-- Step 2 Actions -->
+        <div class="step-actions-group">
+          <button type="button" id="submitBtn" class="btn-submit" onclick="submitRegistration()">
             <span id="btnText">ยืนยันการลงทะเบียน</span>
             <i class="fa-solid fa-paper-plane" id="btnIcon"></i>
           </button>
-        </form>
+          <button type="button" class="btn-status-light" onclick="goBackToFormStep()">
+            <i class="fa-solid fa-arrow-left"></i> ย้อนกลับไปแก้ไขข้อมูล
+          </button>
+        </div>
       </div>
     </div>
 
@@ -876,37 +956,21 @@
       });
     }
 
-    // Submit Registration Form
-    document.getElementById("regForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      // Unhappy Case: Prevent double submit while in-flight
-      if (isSubmitting) return;
-
+    // Step 1: Validate Information and Go to PDPA Step 2
+    function goToPdpaStep() {
       clearValidationErrors();
       hideGlobalBanner();
 
-      const submitBtn = document.getElementById("submitBtn");
-      const btnText = document.getElementById("btnText");
-      const btnIcon = document.getElementById("btnIcon");
-
-      // Unhappy Case 1: Check Internet Connection Offline
-      if (!navigator.onLine) {
-        showToast("ไม่มีการเชื่อมต่ออินเทอร์เน็ต โปรดตรวจสอบการเชื่อมต่อของคุณ", "error");
-        showGlobalBanner("ไม่มีการเชื่อมต่ออินเทอร์เน็ต โปรดตรวจสอบสัญญาณของคุณแล้วลองอีกครั้ง", "error");
-        return;
-      }
-
       let hasError = false;
 
-      // Unhappy Case 2: Validate Full Name
+      // Validate Full Name
       const fullName = document.getElementById("fullName").value.trim();
       if (!fullName || fullName.length < 2) {
         showFieldError("fullName", "fullNameError", "กรุณากรอกชื่อ-นามสกุลจริงอย่างน้อย 2 ตัวอักษร");
         hasError = true;
       }
 
-      // Unhappy Case 3: Validate Phone Format & Dummy Numbers
+      // Validate Phone
       const rawPhone = document.getElementById("phone").value.replace(/\D/g, "");
       const dummyPhones = ["0000000000", "0123456789", "0999999999", "0888888888", "0111111111"];
       if (!/^0[6892357]\d{8}$/.test(rawPhone) || dummyPhones.includes(rawPhone)) {
@@ -914,7 +978,7 @@
         hasError = true;
       }
 
-      // Unhappy Case 4: Validate Email Format
+      // Validate Email
       const emailVal = document.getElementById("email").value.trim();
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
       if (!emailRegex.test(emailVal)) {
@@ -922,40 +986,22 @@
         hasError = true;
       }
 
-      // Unhappy Case 5: Validate Company / Organization
+      // Validate Company
       const companyVal = document.getElementById("company").value.trim();
       if (!companyVal || companyVal.length < 2) {
         showFieldError("company", "companyError", "กรุณากรอกชื่อบริษัท / องค์กร");
         hasError = true;
       }
 
-      // Unhappy Case 6: Validate Project Code / Name
+      // Validate Project
       const rawProjectVal = document.getElementById("projectCode").value.trim();
       if (!rawProjectVal) {
         showFieldError("projectCode", "projectCodeError", "กรุณาระบุรหัสหรือชื่อโครงการ (ERPNext Project)");
         hasError = true;
       }
 
-      // Unhappy Case 7: Validate PDPA Consent
-      const pdpaVal = document.getElementById("pdpaConsentVal").value;
-      if (pdpaVal !== "1") {
-        const errMsg = pdpaVal === "0"
-          ? "ท่านเลือกไม่ยินยอมนโยบาย PDPA (จำเป็นต้องยินยอมเพื่อลงทะเบียน)"
-          : "กรุณาเลื่อนอ่านและกดยินยอมนโยบาย PDPA ก่อนลงทะเบียน";
-        showFieldError("pdpaBox", "pdpaError", errMsg);
-        hasError = true;
-      }
-
       if (hasError) {
-        if (pdpaVal !== "1") {
-          showToast("⚠️ กรุณากดยินยอมนโยบายความเป็นส่วนตัว (PDPA) ก่อนลงทะเบียน", "error");
-          const pdpaBox = document.getElementById("pdpaBox");
-          if (pdpaBox) {
-            pdpaBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          }
-        } else {
-          showToast("กรุณากรอกข้อมูลให้ครบถ้วนทุกช่องตามที่มีเครื่องหมาย *", "error");
-        }
+        showToast("กรุณากรอกข้อมูลให้ครบถ้วนทุกช่องตามที่มีเครื่องหมาย *", "error");
         return;
       }
 
@@ -965,7 +1011,72 @@
         return;
       }
 
-      // Unhappy Case 8: Determine LINE User ID (ต้องมีค่าจาก LINE Profile)
+      // Populate Summary in Step 2 (PDPA View)
+      const matchedProj = findMatchingProject(rawProjectVal);
+      const displayProjText = matchedProj ? `${matchedProj.project_name || matchedProj.name} (${matchedProj.project_code || matchedProj.code})` : rawProjectVal;
+
+      const sumFullName = document.getElementById("sumFullName");
+      if (sumFullName) sumFullName.textContent = fullName;
+      const sumPhone = document.getElementById("sumPhone");
+      if (sumPhone) sumPhone.textContent = document.getElementById("phone").value;
+      const sumEmail = document.getElementById("sumEmail");
+      if (sumEmail) sumEmail.textContent = emailVal;
+      const sumCompany = document.getElementById("sumCompany");
+      if (sumCompany) sumCompany.textContent = companyVal;
+      const sumProject = document.getElementById("sumProject");
+      if (sumProject) sumProject.textContent = displayProjText;
+
+      // Navigate to Step 2
+      showView("pdpaView");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // Go Back from Step 2 to Step 1 Form
+    function goBackToFormStep() {
+      showView("formView");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    // Step 2: Submit Registration Form to Backend
+    async function submitRegistration() {
+      if (isSubmitting) return;
+
+      clearValidationErrors();
+      hideGlobalBanner();
+
+      const submitBtn = document.getElementById("submitBtn");
+      const btnText = document.getElementById("btnText");
+      const btnIcon = document.getElementById("btnIcon");
+
+      // Check Internet Connection Offline
+      if (!navigator.onLine) {
+        showToast("ไม่มีการเชื่อมต่ออินเทอร์เน็ต โปรดตรวจสอบการเชื่อมต่อของคุณ", "error");
+        showGlobalBanner("ไม่มีการเชื่อมต่ออินเทอร์เน็ต โปรดตรวจสอบสัญญาณของคุณแล้วลองอีกครั้ง", "error");
+        return;
+      }
+
+      // Validate PDPA Consent
+      const pdpaVal = document.getElementById("pdpaConsentVal").value;
+      if (pdpaVal !== "1") {
+        const errMsg = pdpaVal === "0"
+          ? "ท่านเลือกไม่ยินยอมนโยบาย PDPA (จำเป็นต้องยินยอมเพื่อลงทะเบียน)"
+          : "กรุณาเลื่อนอ่านและกดยินยอมนโยบาย PDPA ก่อนลงทะเบียน";
+        showFieldError("pdpaBox", "pdpaError", errMsg);
+        showToast("⚠️ กรุณากดยินยอมนโยบายความเป็นส่วนตัว (PDPA) ก่อนลงทะเบียน", "error");
+        const pdpaBox = document.getElementById("pdpaBox");
+        if (pdpaBox) pdpaBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      const fullName = document.getElementById("fullName").value.trim();
+      const rawPhone = document.getElementById("phone").value.replace(/\D/g, "");
+      const emailVal = document.getElementById("email").value.trim();
+      const rawProjectVal = document.getElementById("projectCode").value.trim();
+      const matchedProj = findMatchingProject(rawProjectVal);
+      const projCodeToSend = matchedProj ? (matchedProj.project_code || matchedProj.code || matchedProj.name) : rawProjectVal;
+      const displayProjText = matchedProj ? `${matchedProj.project_name || matchedProj.name} (${matchedProj.project_code || matchedProj.code})` : (rawProjectVal || "-");
+
+      // Determine LINE User ID
       let lineUserId = document.getElementById("lineUserId").value;
       if (!lineUserId) {
         showToast("กรุณาเข้าสู่ระบบ LINE ก่อนทำการลงทะเบียน", "error");
@@ -975,13 +1086,9 @@
       }
 
       let lineDisplayName = document.getElementById("lineDisplayName").value || fullName;
-      const matchedProj = findMatchingProject(rawProjectVal);
-      const projCodeToSend = matchedProj ? (matchedProj.project_code || matchedProj.code || matchedProj.name) : rawProjectVal;
-      const displayProjText = matchedProj ? `${matchedProj.project_name || matchedProj.name} (${matchedProj.project_code || matchedProj.code})` : (rawProjectVal || "-");
 
       // Check if mockup/mock mode is active
       if (isMockMode) {
-        // Set In-Flight & UI Mock Loading State
         isSubmitting = true;
         submitBtn.disabled = true;
         btnText.textContent = "กำลังลงทะเบียน (Mock)...";
@@ -997,7 +1104,7 @@
 
           if (mockResult === "success") {
             showToast("ลงทะเบียนสำเร็จเรียบร้อย! (Mock)", "success");
-            document.getElementById("recFullName").textContent = document.getElementById("fullName").value.trim();
+            document.getElementById("recFullName").textContent = fullName;
             document.getElementById("recPhone").textContent = document.getElementById("phone").value;
             document.getElementById("recProject").textContent = displayProjText;
             document.getElementById("recDate").textContent = new Date().toLocaleDateString('th-TH', {
@@ -1007,11 +1114,8 @@
 
           } else if (mockResult === "already") {
             showToast("⚠️ ท่านได้ลงทะเบียนสมาชิกในระบบเรียบร้อยแล้ว (Mock)", "info");
-            const inputName = document.getElementById("fullName").value.trim();
-            const inputPhone = document.getElementById("phone").value;
-            
-            document.getElementById("existFullName").textContent = inputName || "สมชาย ใจดี (Mock Profile)";
-            document.getElementById("existPhone").textContent = inputPhone || "089-123-4567";
+            document.getElementById("existFullName").textContent = fullName || "สมชาย ใจดี (Mock Profile)";
+            document.getElementById("existPhone").textContent = document.getElementById("phone").value || "089-123-4567";
             document.getElementById("existProject").textContent = displayProjText !== "-" ? displayProjText : "โครงการพัฒนาทักษะดิจิทัล (PROJ002)";
             
             document.getElementById("existNameRow").style.display = "flex";
@@ -1052,9 +1156,9 @@
       btnText.textContent = "กำลังลงทะเบียน...";
       btnIcon.className = "spinner";
 
-      // Format current date in local time YYYY-MM-DD (e.g. 2026-08-15) for Frappe/ERPNext Date type
+      // Format current date in local time YYYY-MM-DD
       const localDate = new Date();
-      const tzOffset = 7 * 60; // GMT+7 timezone offset in minutes
+      const tzOffset = 7 * 60;
       const localTime = new Date(localDate.getTime() + tzOffset * 60 * 1000);
       const registrationDate = localTime.toISOString().split('T')[0];
 
@@ -1063,15 +1167,15 @@
         line_user_id: lineUserId,
         line_display_name: lineDisplayName,
         line_picture_url: document.getElementById("linePictureUrl").value,
-        full_name: document.getElementById("fullName").value.trim(),
+        full_name: fullName,
         phone: rawPhone,
         email: emailVal,
         company: document.getElementById("company").value.trim(),
         project: projCodeToSend,
         project_code: projCodeToSend,
-        pdpa_consent: pdpaConsent ? 1 : 0, // Check field in Frappe maps to 1 (true) or 0 (false)
+        pdpa_consent: 1,
         pdpa_consent_datetime: nowIso,
-        registration_date: registrationDate, // Matches Mandatory 'registration_date' Date field in DocType
+        registration_date: registrationDate,
         platform: (typeof liff !== "undefined" && liff.isInClient && liff.isInClient()) ? "MOBILE_LIFF" : "DESKTOP_WEB",
         registered_at: nowIso
       };
@@ -1088,10 +1192,9 @@
         try {
           resJson = await response.json();
         } catch (e) {
-          // Response body is not JSON or empty
+          // Non-JSON response
         }
 
-        // Unhappy Case Evaluation: Check if JSON indicates failure
         const isJsonFailure = resJson && (resJson.success === false || resJson.status === 'error' || resJson.status === 'failed');
 
         // Unhappy Case Evaluation: Check if user/phone/LINE ID already registered
@@ -1129,8 +1232,7 @@
           if (alreadyRegMsg) alreadyRegMsg.textContent = existMsg;
 
           setTimeout(() => {
-            document.getElementById("formView").style.display = "none";
-            document.getElementById("alreadyRegisteredView").style.display = "block";
+            showView("alreadyRegisteredView");
           }, 400);
 
         } else if (response.ok && !isJsonFailure) {
@@ -1147,8 +1249,7 @@
           });
 
           setTimeout(() => {
-            document.getElementById("formView").style.display = "none";
-            document.getElementById("successView").style.display = "block";
+            showView("successView");
           }, 500);
 
         } else {
@@ -1218,11 +1319,11 @@
         btnText.textContent = "ยืนยันการลงทะเบียน";
         btnIcon.className = "fa-solid fa-paper-plane";
       }
-    });
+    }
 
     // Switch between views cleanly and update the mockup preview bar states
     function showView(viewId) {
-      const views = ['formView', 'successView', 'alreadyRegisteredView', 'failedView'];
+      const views = ['formView', 'pdpaView', 'successView', 'alreadyRegisteredView', 'failedView'];
       views.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = (id === viewId) ? 'block' : 'none';
