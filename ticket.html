@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>แจ้งปัญหาการใช้งาน - HD Ticket (ERPNext)</title>
+
+  <!-- Google Fonts: Kanit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- LINE LIFF SDK -->
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <!-- Background Graphics -->
+  <div class="bg-shape shape-1"></div>
+  <div class="bg-shape shape-2"></div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">
+    <i id="toastIcon" class="fa-solid fa-circle-check"></i>
+    <span id="toastMsg">ข้อความแจ้งเตือน</span>
+  </div>
+
+  <!-- Main Container -->
+  <div class="app-container">
+
+    <!-- 1. Initial Checking / Loading State View -->
+    <div id="loadingView" class="status-screen" style="display: block;">
+      <div class="status-icon-wrap" style="background: #F1F5F9; color: var(--line-green);">
+        <i class="fa-solid fa-spinner fa-spin"></i>
+      </div>
+      <h2>กำลังตรวจสอบสิทธิ์การใช้งาน...</h2>
+      <p>กรุณารอสักครู่ ระบบกำลังเชื่อมต่อข้อมูลกับ ERPNext</p>
+    </div>
+
+    <!-- 2. Unregistered Alert View (เมื่อตรวจพบว่าผู้ใช้ยังไม่ลงทะเบียน) -->
+    <div id="unregisteredView" class="status-screen" style="display: none;">
+      <div class="status-icon-wrap warning-icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h2>สิทธิ์การใช้งานไม่ถูกต้อง</h2>
+      <p id="unregDesc">ระบบไม่พบข้อมูลการลงทะเบียนของคุณใน ERPNext กรุณาทำการลงทะเบียนก่อนส่งเรื่องแจ้งปัญหา</p>
+
+      <div class="receipt-box warning-box" style="text-align: left;">
+        <div class="receipt-row">
+          <span>สถานะ:</span>
+          <span class="val" style="color: #EF4444;"><i class="fa-solid fa-circle-xmark"></i> ยังไม่ได้ลงทะเบียน</span>
+        </div>
+        <div class="receipt-row">
+          <span>คำแนะนำ:</span>
+          <span class="val" style="color: #475569;">กดปุ่มด้านล่างเพื่อเปิดฟอร์มลงทะเบียนสมาชิก</span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <a href="index.html" class="btn-submit" style="text-decoration: none;">
+          <i class="fa-solid fa-user-plus"></i> ไปที่หน้าลงทะเบียนสมาชิก
+        </a>
+        <button type="button" class="btn-status-dark" onclick="closeLiffWindow()">
+          <i class="fa-solid fa-comment"></i> กลับสู่แชท LINE
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. Ticket Form View (เมื่อผู้ใช้ผ่านการลงทะเบียนแล้ว) -->
+    <div id="ticketFormView" style="display: none;">
+      <div class="header">
+        <div class="header-logo" style="background: #0284C7; color: white;">
+          <i class="fa-solid fa-headset"></i>
+        </div>
+        <h1>แจ้งปัญหาการใช้งาน</h1>
+        <p>ระบบแจ้งเรื่องและบันทึกปัญหา (HD Ticket)</p>
+      </div>
+
+      <div class="form-wrapper">
+
+        <!-- User Verified Header Profile -->
+        <div class="profile-card" id="userProfileCard" style="display: flex; margin-bottom: 16px;">
+          <img id="userPicture" src="https://placehold.co/100x100?text=User" alt="LINE Profile" class="profile-avatar">
+          <div class="profile-info">
+            <span class="greeting-label">ผู้แจ้งเรื่อง (LINE Account)</span>
+            <span class="name-value" id="userDisplayName">กำลังโหลด...</span>
+            <span class="uid-value" id="userStatusTag" style="color: #059669;"><i class="fa-solid fa-circle-check"></i> ยืนยันสิทธิ์ในระบบแล้ว</span>
+          </div>
+        </div>
+
+        <!-- Global Alert Banner -->
+        <div id="globalErrorBanner" class="alert-banner">
+          <div class="banner-content">
+            <i id="bannerIcon" class="fa-solid fa-circle-exclamation"></i>
+            <span id="bannerMessage">เกิดข้อผิดพลาด</span>
+          </div>
+          <button type="button" class="banner-close" onclick="hideGlobalBanner()" title="ปิด"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <form id="ticketForm" novalidate>
+          <!-- Hidden System Fields -->
+          <input type="hidden" id="lineUserId" value="">
+          <input type="hidden" id="docType" value="HD Ticket">
+          <input type="hidden" id="projectCode" value="">
+
+          <!-- DocType Indicator Badge -->
+          <div class="doctype-badge">
+            <i class="fa-solid fa-ticket"></i> DocType: HD Ticket (ERPNext Helpdesk)
+          </div>
+
+          <!-- 1. Ticket Writer / User Email (Read-Only Fetch Auto) -->
+          <div class="form-group">
+            <label class="form-label" for="userEmail">
+              <i class="fa-regular fa-envelope"></i> ผู้แจ้ง / อีเมล (User Email) <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <input type="email" id="userEmail" class="form-control readonly-field" readonly required placeholder="กำลังดึงอีเมลจากระบบ...">
+              <i class="fa-solid fa-envelope input-icon"></i>
+              <i class="fa-solid fa-lock input-lock-icon" title="ดึงข้อมูลอัตโนมัติจากระบบ"></i>
+            </div>
+            <div class="field-hint">
+              <span><i class="fa-solid fa-circle-info"></i> ดึงข้อมูลอัตโนมัติจากบัญชีผู้ใช้ในระบบ ERPNext (Read-only)</span>
+            </div>
+          </div>
+
+          <!-- 2. Project (Read-Only Fetch Auto) -->
+          <div class="form-group">
+            <label class="form-label" for="projectName">
+              <i class="fa-solid fa-diagram-project"></i> โครงการ (Project) <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <input type="text" id="projectName" class="form-control readonly-field" readonly required placeholder="กำลังดึงโครงการจากระบบ...">
+              <i class="fa-solid fa-folder-tree input-icon"></i>
+              <i class="fa-solid fa-lock input-lock-icon" title="ดึงข้อมูลอัตโนมัติจากระบบ"></i>
+            </div>
+            <div class="field-hint">
+              <span><i class="fa-solid fa-circle-info"></i> ดึงข้อมูลอัตโนมัติจากโครงการที่ผูกกับโปรไฟล์ผู้ใช้ (Read-only)</span>
+            </div>
+          </div>
+
+          <!-- 3. Subject (User Input - Required *) -->
+          <div class="form-group">
+            <label class="form-label" for="subject">
+              <i class="fa-solid fa-heading"></i> ชื่อเรื่อง / หัวข้อปัญหา (Subject) <span class="required">*</span>
+            </label>
+            <div class="input-wrapper">
+              <input type="text" id="subject" class="form-control" required placeholder="ระบุชื่อเรื่อง เช่น ขอเพิ่มสิทธิ์การใช้งาน, ระบบแสดง Error..." autocomplete="off">
+              <i class="fa-solid fa-pen input-icon"></i>
+            </div>
+            <div class="error-msg" id="subjectError">
+              <i class="fa-solid fa-circle-exclamation"></i> <span>กรุณาระบุชื่อเรื่อง / หัวข้อปัญหา</span>
+            </div>
+          </div>
+
+          <!-- 4. Description (User Input) -->
+          <div class="form-group">
+            <label class="form-label" for="description">
+              <i class="fa-regular fa-file-lines"></i> รายละเอียดปัญหา (Description)
+            </label>
+            <div class="input-wrapper">
+              <textarea id="description" class="form-control" rows="4" placeholder="กรุณาระบุรายละเอียดปัญหา ขั้นตอนที่พบปัญหา หรือข้อความแจ้งเตือนที่ปรากฏบนหน้าจอ..."></textarea>
+              <i class="fa-solid fa-align-left input-icon" style="top: 14px;"></i>
+            </div>
+          </div>
+
+          <!-- 5. Attach File (User Input File Upload) -->
+          <div class="form-group">
+            <label class="form-label">
+              <i class="fa-solid fa-paperclip"></i> แนบรูปภาพหรือไฟล์หลักฐาน (Attach Files)
+            </label>
+            
+            <div class="file-upload-card" id="fileDropZone">
+              <input type="file" id="fileInput" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip">
+              <div class="file-upload-icon">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+              </div>
+              <div class="file-upload-title">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</div>
+              <div class="file-upload-subtext">รองรับไฟล์รูปภาพ, PDF, Word, Excel, ZIP (สูงสุด 10MB/ไฟล์)</div>
+            </div>
+
+            <!-- Selected Files Preview List -->
+            <div id="filePreviewList" class="file-list-preview" style="display: none;"></div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="btnSubmitTicket" class="btn-submit">
+            <span id="btnText">ส่งเรื่องแจ้งปัญหา</span>
+            <i class="fa-solid fa-paper-plane" id="btnIcon"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 4. Ticket Created Success Receipt View -->
+    <div id="successView" class="success-screen" style="display: none;">
+      <div class="success-icon-wrap" style="background: #E0F2FE; color: #0284C7;">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <h2>ส่งเรื่องแจ้งปัญหาสำเร็จ!</h2>
+      <p>ระบบได้สร้าง Ticket ในระบบ ERPNext เรียบร้อยแล้ว</p>
+
+      <div class="receipt-box" style="text-align: left;">
+        <div class="receipt-row">
+          <span>เลขที่ Ticket:</span>
+          <span class="val" id="recTicketId" style="color: #0284C7; font-weight: 700;">-</span>
+        </div>
+        <div class="receipt-row">
+          <span>หัวข้อเรื่อง:</span>
+          <span class="val" id="recSubject">-</span>
+        </div>
+        <div class="receipt-row">
+          <span>โครงการ:</span>
+          <span class="val" id="recProject">-</span>
+        </div>
+        <div class="receipt-row">
+          <span>ผู้แจ้งเรื่อง:</span>
+          <span class="val" id="recEmail">-</span>
+        </div>
+        <div class="receipt-row">
+          <span>จำนวนไฟล์แนบ:</span>
+          <span class="val" id="recFilesCount">0 ไฟล์</span>
+        </div>
+        <div class="receipt-row">
+          <span>วันที่ส่งเรื่อง:</span>
+          <span class="val" id="recDate">-</span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button type="button" class="btn-submit" onclick="closeLiffWindow()">
+          <i class="fa-solid fa-comment"></i> กลับสู่แชท LINE
+        </button>
+        <button type="button" class="btn-status-light" onclick="resetTicketForm()">
+          <i class="fa-solid fa-plus"></i> แจ้งเรื่องอื่นเพิ่มเติม
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. Ticket Failed View -->
+    <div id="failedView" class="status-screen" style="display: none;">
+      <div class="status-icon-wrap failed-icon">
+        <i class="fa-solid fa-circle-xmark"></i>
+      </div>
+      <h2>ส่งเรื่องแจ้งปัญหาไม่สำเร็จ!</h2>
+      <p>เกิดข้อผิดพลาดในการบันทึกข้อมูลลงในระบบ ERPNext</p>
+
+      <div class="receipt-box error-box" style="text-align: left;">
+        <div class="receipt-row">
+          <span>สาเหตุ:</span>
+          <span class="val" id="failedReason" style="color: #EF4444;">ไม่สามารถติดต่อเซิร์ฟเวอร์</span>
+        </div>
+        <div class="receipt-row" id="failedDetailRow">
+          <span>รายละเอียด:</span>
+          <span class="val" id="failedDetail">-</span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button type="button" class="btn-submit" onclick="showTicketFormView()">
+          <i class="fa-solid fa-rotate-right"></i> ลองส่งใหม่อีกครั้ง
+        </button>
+        <button type="button" class="btn-status-dark" onclick="closeLiffWindow()">
+          <i class="fa-solid fa-comment"></i> กลับสู่แชท LINE
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- JavaScript Logic -->
+  <script>
+    // System Configuration
+    const CONFIG = {
+      LIFF_ID: "2006859345-d8K7k8ZJ",
+      N8N_CHECK_USER_URL: "https://primary-production-47c0.up.railway.app/webhook/check-user",
+      N8N_CREATE_TICKET_URL: "https://primary-production-47c0.up.railway.app/webhook/create-ticket",
+      API_TIMEOUT_MS: 15000,
+      MAX_FILE_SIZE_BYTES: 10 * 1024 * 1024 // 10MB
+    };
+
+    let selectedFiles = [];
+    let isSubmitting = false;
+    let currentUserProfile = null;
+    let isMockMode = false;
+
+    // Toast Utility
+    function showToast(message, type = "info") {
+      const toast = document.getElementById("toast");
+      const icon = document.getElementById("toastIcon");
+      const msg = document.getElementById("toastMsg");
+
+      msg.textContent = message;
+      toast.className = `toast ${type}`;
+
+      if (type === "success") {
+        icon.className = "fa-solid fa-circle-check";
+      } else if (type === "error") {
+        icon.className = "fa-solid fa-circle-xmark";
+      } else {
+        icon.className = "fa-solid fa-circle-info";
+      }
+
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3800);
+    }
+
+    // Banner Utility
+    function showGlobalBanner(message, type = "error") {
+      const banner = document.getElementById("globalErrorBanner");
+      const icon = document.getElementById("bannerIcon");
+      const msg = document.getElementById("bannerMessage");
+
+      msg.textContent = message;
+      banner.className = `alert-banner ${type} show`;
+      icon.className = type === "error" ? "fa-solid fa-circle-exclamation" : "fa-solid fa-triangle-exclamation";
+    }
+
+    function hideGlobalBanner() {
+      const banner = document.getElementById("globalErrorBanner");
+      if (banner) banner.classList.remove("show");
+    }
+
+    // View Routing
+    function showView(viewId) {
+      const views = ['loadingView', 'unregisteredView', 'ticketFormView', 'successView', 'failedView'];
+      views.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = (id === viewId) ? 'block' : 'none';
+      });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showTicketFormView() {
+      showView('ticketFormView');
+    }
+
+    // Fetch With Timeout Helper
+    async function fetchWithTimeout(resource, options = {}) {
+      const { timeout = CONFIG.API_TIMEOUT_MS } = options;
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      const response = await fetch(resource, {
+        ...options,
+        signal: controller.signal
+      });
+      clearTimeout(id);
+      return response;
+    }
+
+    // Initialization
+    async function main() {
+      const urlParams = new URLSearchParams(window.location.search);
+      isMockMode = urlParams.get('mock') === 'true';
+
+      if (isMockMode) {
+        console.log("Mock Mode Active");
+        // Simulate User Data
+        setTimeout(() => {
+          const isUnregisteredMock = urlParams.get('unreg') === 'true';
+          if (isUnregisteredMock) {
+            showView('unregisteredView');
+          } else {
+            currentUserProfile = {
+              lineUserId: "U_MOCK_LINE_USER_001",
+              displayName: "สมชาย ทดสอบ (Mock)",
+              pictureUrl: "https://placehold.co/100x100/06C755/white?text=LINE",
+              email: "somchai.dev@example.com",
+              project: "PROJ001",
+              projectName: "โครงการพัฒนาทักษะดิจิทัล (PROJ001)"
+            };
+            populateUserData(currentUserProfile);
+            showView('ticketFormView');
+          }
+        }, 600);
+        return;
+      }
+
+      try {
+        await liff.init({ liffId: CONFIG.LIFF_ID });
+
+        if (!liff.isLoggedIn()) {
+          liff.login();
+          return;
+        }
+
+        const profile = await liff.getProfile();
+        document.getElementById("lineUserId").value = profile.userId;
+        document.getElementById("userDisplayName").textContent = profile.displayName;
+        if (profile.pictureUrl) {
+          document.getElementById("userPicture").src = profile.pictureUrl;
+        }
+
+        // Verify User Registration with ERPNext via n8n
+        await verifyUserRegistration(profile.userId, profile);
+
+      } catch (err) {
+        console.error("LIFF Init error:", err);
+        // Fallback if not inside LIFF
+        showToast("ไม่สามารถเปิด LINE LIFF ได้ ใช้งานโหมดทดสอบอัตโนมัติ", "info");
+        currentUserProfile = {
+          lineUserId: "U_DESKTOP_DEV_USER",
+          displayName: "ผู้ใช้งานทั่วไป (Web Test)",
+          pictureUrl: "https://placehold.co/100x100/0284C7/white?text=USER",
+          email: "user@example.com",
+          project: "PROJ001",
+          projectName: "ระบบบริการลูกค้า (PROJ001)"
+        };
+        populateUserData(currentUserProfile);
+        showView('ticketFormView');
+      }
+    }
+
+    // Verify User Status via n8n
+    async function verifyUserRegistration(lineUserId, liffProfile) {
+      try {
+        const res = await fetchWithTimeout(CONFIG.N8N_CHECK_USER_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            line_user_id: lineUserId,
+            events: [{ source: { userId: lineUserId } }]
+          }),
+          timeout: 10000
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === "UNREGISTERED" || !data.is_registered) {
+            // User Not Registered in ERPNext
+            showView('unregisteredView');
+          } else {
+            // User Registered: Auto-populate Read-Only fields
+            currentUserProfile = {
+              lineUserId: lineUserId,
+              displayName: liffProfile.displayName,
+              pictureUrl: liffProfile.pictureUrl,
+              email: data.user_email || data.email || data.formData?.user_email || "user@example.com",
+              project: data.project || data.project_code || data.formData?.project_code || "PROJ001",
+              projectName: data.project_name || data.formData?.project_name || "โครงการหลัก"
+            };
+            populateUserData(currentUserProfile);
+            showView('ticketFormView');
+          }
+        } else {
+          // If check endpoint fails, show form with fallback or prompt registration
+          console.warn("Check user endpoint returned error, allowing form input with defaults");
+          currentUserProfile = {
+            lineUserId: lineUserId,
+            displayName: liffProfile.displayName,
+            pictureUrl: liffProfile.pictureUrl,
+            email: `${lineUserId.substring(0, 8)}@customer.line`,
+            project: "GENERAL",
+            projectName: "โครงการทั่วไป (Auto Linked)"
+          };
+          populateUserData(currentUserProfile);
+          showView('ticketFormView');
+        }
+      } catch (e) {
+        console.error("Check user error:", e);
+        // Fallback for network error
+        currentUserProfile = {
+          lineUserId: lineUserId,
+          displayName: liffProfile.displayName,
+          pictureUrl: liffProfile.pictureUrl,
+          email: "customer@example.com",
+          project: "GENERAL",
+          projectName: "โครงการทั่วไป"
+        };
+        populateUserData(currentUserProfile);
+        showView('ticketFormView');
+      }
+    }
+
+    // Populate Read-Only User Data
+    function populateUserData(profile) {
+      document.getElementById("lineUserId").value = profile.lineUserId;
+      document.getElementById("userEmail").value = profile.email;
+      document.getElementById("projectName").value = profile.projectName || profile.project;
+      document.getElementById("projectCode").value = profile.project;
+      document.getElementById("userDisplayName").textContent = profile.displayName;
+      if (profile.pictureUrl) {
+        document.getElementById("userPicture").src = profile.pictureUrl;
+      }
+    }
+
+    // File Upload Handling
+    const fileInput = document.getElementById("fileInput");
+    const fileDropZone = document.getElementById("fileDropZone");
+    const filePreviewList = document.getElementById("filePreviewList");
+
+    if (fileDropZone && fileInput) {
+      fileDropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        fileDropZone.classList.add("dragover");
+      });
+
+      fileDropZone.addEventListener("dragleave", () => {
+        fileDropZone.classList.remove("dragover");
+      });
+
+      fileDropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        fileDropZone.classList.remove("dragover");
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleFiles(e.dataTransfer.files);
+        }
+      });
+
+      fileInput.addEventListener("change", () => {
+        if (fileInput.files && fileInput.files.length > 0) {
+          handleFiles(fileInput.files);
+        }
+      });
+    }
+
+    async function handleFiles(files) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > CONFIG.MAX_FILE_SIZE_BYTES) {
+          showToast(`⚠️ ไฟล์ "${file.name}" มีขนาดเกิน 10MB`, "error");
+          continue;
+        }
+
+        // Read file as Base64 Data URL
+        const base64Data = await readFileAsBase64(file);
+        selectedFiles.push({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          dataUrl: base64Data
+        });
+      }
+      renderFilePreviewList();
+    }
+
+    function readFileAsBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function removeFile(index) {
+      selectedFiles.splice(index, 1);
+      renderFilePreviewList();
+    }
+
+    function formatBytes(bytes, decimals = 1) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    function renderFilePreviewList() {
+      if (!filePreviewList) return;
+      if (selectedFiles.length === 0) {
+        filePreviewList.style.display = "none";
+        filePreviewList.innerHTML = "";
+        return;
+      }
+
+      filePreviewList.style.display = "flex";
+      filePreviewList.innerHTML = selectedFiles.map((f, idx) => {
+        const isImg = f.type.startsWith('image/');
+        const iconHtml = isImg
+          ? `<img src="${f.dataUrl}" class="file-thumb-preview" alt="Preview">`
+          : `<div class="file-thumb-preview"><i class="fa-solid fa-file-lines"></i></div>`;
+
+        return `
+          <div class="file-preview-item">
+            <div class="file-info-group">
+              ${iconHtml}
+              <div class="file-name-meta">
+                <span class="file-name-text" title="${f.name}">${f.name}</span>
+                <span class="file-size-text">${formatBytes(f.size)}</span>
+              </div>
+            </div>
+            <button type="button" class="btn-file-remove" onclick="removeFile(${idx})" title="ลบไฟล์">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Real-time Validation Error Clearance
+    const subjectInput = document.getElementById("subject");
+    if (subjectInput) {
+      subjectInput.addEventListener("input", () => {
+        const err = document.getElementById("subjectError");
+        if (err) err.classList.remove("show");
+        subjectInput.classList.remove("is-invalid");
+      });
+    }
+
+    // Submit Ticket Form
+    document.getElementById("ticketForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (isSubmitting) return;
+
+      hideGlobalBanner();
+
+      const subjectVal = document.getElementById("subject").value.trim();
+      const subjectError = document.getElementById("subjectError");
+
+      if (!subjectVal || subjectVal.length < 2) {
+        if (subjectError) subjectError.classList.add("show");
+        document.getElementById("subject").classList.add("is-invalid");
+        showToast("กรุณากรอกชื่อเรื่อง / หัวข้อปัญหาอย่างน้อย 2 ตัวอักษร", "error");
+        document.getElementById("subject").focus();
+        return;
+      }
+
+      const submitBtn = document.getElementById("btnSubmitTicket");
+      const btnText = document.getElementById("btnText");
+      const btnIcon = document.getElementById("btnIcon");
+
+      if (!navigator.onLine) {
+        showToast("ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบสัญญาณ", "error");
+        showGlobalBanner("ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบสัญญาณแล้วลองใหม่อีกครั้ง", "error");
+        return;
+      }
+
+      isSubmitting = true;
+      submitBtn.disabled = true;
+      btnText.textContent = "กำลังส่งเรื่องแจ้งปัญหา...";
+      btnIcon.className = "spinner";
+
+      const nowIso = new Date().toISOString();
+      const payload = {
+        doctype: "HD Ticket",
+        ticket_writer: document.getElementById("userEmail").value,
+        user_email: document.getElementById("userEmail").value,
+        project: document.getElementById("projectCode").value,
+        project_name: document.getElementById("projectName").value,
+        subject: subjectVal,
+        description: document.getElementById("description").value.trim(),
+        line_user_id: document.getElementById("lineUserId").value,
+        attachments: selectedFiles.map(f => ({
+          filename: f.name,
+          filesize: f.size,
+          filetype: f.type,
+          data: f.dataUrl
+        })),
+        submitted_at: nowIso
+      };
+
+      // Mock Mode Submission
+      if (isMockMode) {
+        setTimeout(() => {
+          isSubmitting = false;
+          submitBtn.disabled = false;
+          btnText.textContent = "ส่งเรื่องแจ้งปัญหา";
+          btnIcon.className = "fa-solid fa-paper-plane";
+
+          const mockTicketId = "HD-TIC-" + Math.floor(10000 + Math.random() * 90000);
+          showSuccessScreen(mockTicketId, payload);
+        }, 1000);
+        return;
+      }
+
+      try {
+        const response = await fetchWithTimeout(CONFIG.N8N_CREATE_TICKET_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          timeout: CONFIG.API_TIMEOUT_MS
+        });
+
+        let resJson = null;
+        try {
+          resJson = await response.json();
+        } catch (e) { }
+
+        if (response.ok && (!resJson || resJson.success !== false)) {
+          showToast("ส่งเรื่องแจ้งปัญหาสำเร็จเรียบร้อย!", "success");
+          const ticketId = (resJson && (resJson.ticket_id || resJson.name || resJson.id)) || `HD-TIC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+          showSuccessScreen(ticketId, payload);
+        } else {
+          let errorMsg = (resJson && (resJson.message || resJson.error || resJson.detail)) || "ไม่สามารถสร้าง Ticket ได้ กรุณาลองใหม่อีกครั้ง";
+          showToast(`❌ เกิดข้อผิดพลาด: ${errorMsg}`, "error");
+          
+          document.getElementById("failedReason").textContent = errorMsg;
+          const failedDetail = document.getElementById("failedDetail");
+          if (failedDetail) {
+            failedDetail.textContent = `HTTP Status: ${response.status}`;
+          }
+          showView("failedView");
+        }
+      } catch (err) {
+        console.error("Ticket submission error:", err);
+        let errorMsg = "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง";
+        if (err.name === 'AbortError') {
+          errorMsg = "การเชื่อมต่อหมดเวลา (Timeout) กรุณาลองส่งใหม่อีกครั้ง";
+        }
+        showToast(`❌ ${errorMsg}`, "error");
+
+        document.getElementById("failedReason").textContent = errorMsg;
+        const failedDetail = document.getElementById("failedDetail");
+        if (failedDetail) {
+          failedDetail.textContent = err.message || "Network Error";
+        }
+        showView("failedView");
+      } finally {
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        btnText.textContent = "ส่งเรื่องแจ้งปัญหา";
+        btnIcon.className = "fa-solid fa-paper-plane";
+      }
+    });
+
+    function showSuccessScreen(ticketId, payload) {
+      document.getElementById("recTicketId").textContent = ticketId;
+      document.getElementById("recSubject").textContent = payload.subject;
+      document.getElementById("recProject").textContent = payload.project_name || payload.project;
+      document.getElementById("recEmail").textContent = payload.user_email;
+      document.getElementById("recFilesCount").textContent = `${payload.attachments.length} ไฟล์`;
+      document.getElementById("recDate").textContent = new Date().toLocaleDateString('th-TH', {
+        year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+      showView("successView");
+    }
+
+    function resetTicketForm() {
+      document.getElementById("subject").value = "";
+      document.getElementById("description").value = "";
+      selectedFiles = [];
+      renderFilePreviewList();
+      showView("ticketFormView");
+    }
+
+    function closeLiffWindow() {
+      if (typeof liff !== "undefined" && liff.isInClient && liff.isInClient()) {
+        liff.closeWindow();
+      } else {
+        alert("ขอบคุณสำหรับการแจ้งปัญหา สามารถปิดหน้านี้ได้ทันที");
+      }
+    }
+
+    // Run on page load
+    main();
+  </script>
+</body>
+
+</html>
