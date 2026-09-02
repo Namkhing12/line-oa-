@@ -131,14 +131,17 @@
               <i class="fa-solid fa-diagram-project"></i> โครงการ / รหัสโปรเจกต์ (ERPNext Project) <span class="required">*</span>
             </label>
             <div class="input-wrapper">
-              <input type="text" id="projectCode" list="projectSuggestions" class="form-control" required placeholder="พิมพ์ชื่อหรือรหัสโครงการ (เช่น PROJ001)..." autocomplete="off">
+              <input type="text" id="projectCode" list="projectSuggestions" class="form-control" required placeholder="พิมพ์ชื่อหรือรหัสโครงการ (เช่น PROJ001)..." autocomplete="off" style="padding-right: 48px;">
               <datalist id="projectSuggestions"></datalist>
               <i class="fa-solid fa-folder-tree input-icon"></i>
+              <button type="button" id="btnVerifyProject" class="btn-input-action" onclick="checkProjectManual(true)" title="กดเพื่อตรวจสอบโครงการกับ ERPNext">
+                <i class="fa-solid fa-magnifying-glass"></i>
+              </button>
             </div>
             <div class="error-msg" id="projectCodeError"><i class="fa-solid fa-circle-exclamation"></i>
               <span>กรุณาระบุรหัสหรือชื่อโครงการ (ERPNext Project)</span></div>
             <div class="field-hint" id="projectStatusHint">
-              <span id="projectHintText"><i class="fa-solid fa-circle-info"></i> สามารถพิมพ์ระบุรหัสหรือชื่อโครงการที่ตรงกับระบบ ERPNext ได้</span>
+              <span id="projectHintText"><i class="fa-solid fa-circle-info"></i> พิมพ์รหัส/ชื่อโครงการ และสามารถกดปุ่มแว่นขยายเพื่อตรวจสอบได้</span>
             </div>
             <div id="projectRetryBox"></div>
           </div>
