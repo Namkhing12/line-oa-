@@ -131,17 +131,14 @@
               <i class="fa-solid fa-diagram-project"></i> โครงการ / รหัสโปรเจกต์ (ERPNext Project) <span class="required">*</span>
             </label>
             <div class="input-wrapper">
-              <input type="text" id="projectCode" list="projectSuggestions" class="form-control" required placeholder="พิมพ์ชื่อหรือรหัสโครงการ (เช่น PROJ-INT-0005)..." autocomplete="off" style="padding-right: 125px;">
+              <input type="text" id="projectCode" list="projectSuggestions" class="form-control" required placeholder="พิมพ์ชื่อหรือรหัสโครงการ..." autocomplete="off">
               <datalist id="projectSuggestions"></datalist>
               <i class="fa-solid fa-folder-tree input-icon"></i>
-              <button type="button" id="btnConfirmProject" class="btn-input-confirm" onclick="confirmProjectManual()" title="กดเพื่อยืนยันใช้รหัสโครงการนี้">
-                <i class="fa-solid fa-circle-check"></i> <span>ยืนยันรหัสนี้</span>
-              </button>
             </div>
             <div class="error-msg" id="projectCodeError"><i class="fa-solid fa-circle-exclamation"></i>
               <span>กรุณาระบุรหัสหรือชื่อโครงการ (ERPNext Project)</span></div>
             <div class="field-hint" id="projectStatusHint">
-              <span id="projectHintText"><i class="fa-solid fa-circle-info"></i> พิมพ์รหัส/ชื่อโครงการ แล้วกดปุ่ม "ยืนยันรหัสนี้" เพื่อบันทึก</span>
+              <span id="projectHintText"><i class="fa-solid fa-circle-info"></i> ข้อมูลโครงการจะถูกส่งเพื่อเชื่อมต่อกับระบบ ERPNext</span>
             </div>
             <div id="projectRetryBox"></div>
           </div>
@@ -395,37 +392,7 @@
     </div>
   </div>
 
-  <!-- Project Not Found Alert Modal (แจ้งเตือนป๊อปอัพเมื่อไม่พบโครงการในระบบ ERPNext) -->
-  <div class="modal-overlay" id="projectNotFoundModal">
-    <div class="modal-card modal-warning-card">
-      <div class="modal-header modal-header-warning">
-        <h3><i class="fa-solid fa-triangle-exclamation"></i> ไม่พบโครงการในระบบ ERPNext</h3>
-        <button type="button" class="modal-close" onclick="closeProjectModal()"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <div class="modal-body">
-        <div class="warning-modal-content">
-          <div class="warning-icon-badge">
-            <i class="fa-solid fa-folder-open"></i>
-          </div>
-          <p class="warning-title">ไม่พบรหัสโครงการ "<span id="modalProjectName" style="color: #B45309;">-</span>" ในฐานข้อมูล</p>
-          <p class="warning-subtext">รหัสหรือชื่อโครงการที่คุณระบุไม่มีในรายการของระบบ ERPNext หรืออาจสะกดไม่ตรงกับในระบบ</p>
-          
-          <div class="suggested-projects-box" id="modalSuggestedProjectsBox" style="display: none;">
-            <div class="suggested-header"><i class="fa-solid fa-lightbulb"></i> รายการโครงการที่มีอยู่ในระบบ ERPNext:</div>
-            <div class="suggested-list" id="modalSuggestedList"></div>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer modal-footer-actions">
-        <button type="button" class="btn-status-light" onclick="editProjectInput()">
-          <i class="fa-solid fa-pen-to-square"></i> แก้ไขรหัสโครงการ
-        </button>
-        <button type="button" class="btn-status-warning" onclick="proceedWithCustomProject()">
-          <i class="fa-solid fa-check"></i> ยืนยันใช้รหัสนี้ต่อไป
-        </button>
-      </div>
-    </div>
-  </div>
+
 
   <script>
     // =======================================================================
@@ -608,7 +575,7 @@
       });
     }
 
-    function validateProjectInput(showModalIfNotFound = false) {
+    function validateProjectInput() {
       const input = document.getElementById("projectCode");
       const hint = document.getElementById("projectStatusHint");
       const hintText = document.getElementById("projectHintText");
@@ -618,14 +585,8 @@
 
       if (!val) {
         hint.className = "field-hint";
-        hintText.innerHTML = '<i class="fa-solid fa-circle-info"></i> สามารถพิมพ์ระบุรหัสหรือชื่อโครงการที่ตรงกับระบบ ERPNext ได้';
-        return true;
-      }
-
-      if (availableProjects.length === 0) {
-        hint.className = "field-hint";
         hintText.innerHTML = '<i class="fa-solid fa-circle-info"></i> ข้อมูลโครงการจะถูกส่งเพื่อเชื่อมต่อกับระบบ ERPNext';
-        return true;
+        return false;
       }
 
       const match = findMatchingProject(val);
@@ -634,140 +595,11 @@
         const projName = match.project_name || match.name || match.project_code;
         const projCode = match.project_code || match.code || match.id || projName;
         hintText.innerHTML = `<i class="fa-solid fa-circle-check"></i> ตรงกับ ERPNext: <strong>${projName}</strong> (${projCode})`;
-        return true;
       } else {
-        if (isProjectConfirmed) {
-          hint.className = "field-hint valid";
-          hintText.innerHTML = `<i class="fa-solid fa-circle-check"></i> ยืนยันใช้รหัสโครงการ "${val}" สำหรับระบบ ERPNext`;
-          return true;
-        }
-
-        hint.className = "field-hint warning";
-        hintText.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ไม่พบโครงการ "<strong>${val}</strong>" ในระบบ ERPNext`;
-        
-        if (showModalIfNotFound) {
-          showProjectWarningModal(val);
-          return false;
-        }
-        return false;
-      }
-    }
-
-    function showProjectWarningModal(projVal) {
-      const modal = document.getElementById('projectNotFoundModal');
-      const modalProjectName = document.getElementById('modalProjectName');
-      const suggestedBox = document.getElementById('modalSuggestedProjectsBox');
-      const suggestedList = document.getElementById('modalSuggestedList');
-
-      if (modalProjectName) modalProjectName.textContent = projVal || "-";
-
-      if (suggestedList && availableProjects.length > 0) {
-        suggestedList.innerHTML = '';
-        availableProjects.slice(0, 5).forEach(p => {
-          const code = p.project_code || p.code || p.id || p.name;
-          const name = p.project_name || p.name || code;
-          const item = document.createElement('div');
-          item.className = 'suggested-item';
-          item.innerHTML = `<span><strong>${name}</strong> <small style="color:#64748B;">(${code})</small></span> <i class="fa-solid fa-arrow-right" style="font-size:10px;"></i>`;
-          item.onclick = () => selectSuggestedProject(code);
-          suggestedList.appendChild(item);
-        });
-        if (suggestedBox) suggestedBox.style.display = 'block';
-      } else if (suggestedBox) {
-        suggestedBox.style.display = 'none';
-      }
-
-      if (modal) modal.classList.add('active');
-    }
-
-    function closeProjectModal() {
-      const modal = document.getElementById('projectNotFoundModal');
-      if (modal) modal.classList.remove('active');
-    }
-
-    function editProjectInput() {
-      closeProjectModal();
-      const input = document.getElementById('projectCode');
-      if (input) {
-        input.focus();
-        input.select();
-      }
-    }
-
-    function proceedWithCustomProject() {
-      isProjectConfirmed = true;
-      closeProjectModal();
-      const input = document.getElementById('projectCode');
-      const val = input ? input.value.trim() : '';
-      const hint = document.getElementById("projectStatusHint");
-      const hintText = document.getElementById("projectHintText");
-      if (hint && hintText) {
         hint.className = "field-hint valid";
-        hintText.innerHTML = `<i class="fa-solid fa-circle-check"></i> ยืนยันใช้รหัสโครงการ "${val}" สำหรับระบบ ERPNext`;
+        hintText.innerHTML = `<i class="fa-solid fa-circle-check"></i> ข้อมูลโครงการ: <strong>${val}</strong>`;
       }
-      showToast("ยืนยันใช้รหัสโครงการที่ระบุเรียบร้อย", "info");
-    }
-
-    function selectSuggestedProject(code) {
-      const input = document.getElementById('projectCode');
-      if (input) {
-        input.value = code;
-        isProjectConfirmed = false;
-        validateProjectInput(false);
-      }
-      closeProjectModal();
-      showToast(`เลือกโครงการ ${code} เรียบร้อย`, "success");
-    }
-
-    function confirmProjectManual() {
-      const input = document.getElementById('projectCode');
-      const val = input ? input.value.trim() : '';
-      if (!val) {
-        showFieldError("projectCode", "projectCodeError", "กรุณาระบุรหัสหรือชื่อโครงการก่อนยืนยัน");
-        showToast("กรุณากรอกรหัสหรือชื่อโครงการก่อนยืนยัน", "error");
-        if (input) input.focus();
-        return;
-      }
-
-      isProjectConfirmed = true;
-      removeFieldError("projectCode", "projectCodeError");
-
-      const match = findMatchingProject(val);
-      const hint = document.getElementById("projectStatusHint");
-      const hintText = document.getElementById("projectHintText");
-
-      if (match) {
-        const projName = match.project_name || match.name || match.project_code;
-        const projCode = match.project_code || match.code || match.id || projName;
-        if (hint && hintText) {
-          hint.className = "field-hint valid";
-          hintText.innerHTML = `<i class="fa-solid fa-circle-check"></i> ตรงกับ ERPNext: <strong>${projName}</strong> (${projCode})`;
-        }
-        showToast(`✅ ยืนยันโครงการ "${projName}" เรียบร้อย`, "success");
-      } else {
-        if (hint && hintText) {
-          hint.className = "field-hint valid";
-          hintText.innerHTML = `<i class="fa-solid fa-circle-check"></i> ยืนยันใช้รหัสโครงการ "${val}" สำหรับระบบ ERPNext`;
-        }
-        showToast(`✅ ยืนยันใช้รหัสโครงการ "${val}" เรียบร้อย`, "success");
-      }
-    }
-
-    function checkProjectManual(forceOpenModal = false) {
-      const input = document.getElementById('projectCode');
-      const val = input ? input.value.trim() : '';
-      if (!val) {
-        showToast("กรุณากรอกรหัสหรือชื่อโครงการก่อนตรวจสอบ", "info");
-        if (input) input.focus();
-        return;
-      }
-      const match = findMatchingProject(val);
-      if (match) {
-        validateProjectInput(false);
-        showToast(`✅ พบโครงการ "${match.project_name || match.name}" ในระบบ ERPNext`, "success");
-      } else {
-        showProjectWarningModal(val);
-      }
+      return true;
     }
 
     // Phone Auto-Format (081-234-5678)
@@ -1067,12 +899,6 @@
 
       if (hasError) {
         showToast("กรุณากรอกข้อมูลให้ครบถ้วนทุกช่องตามที่มีเครื่องหมาย *", "error");
-        return;
-      }
-
-      // Check Project Validation against ERPNext (if not confirmed yet)
-      if (rawProjectVal && availableProjects.length > 0 && !findMatchingProject(rawProjectVal) && !isProjectConfirmed) {
-        showProjectWarningModal(rawProjectVal);
         return;
       }
 
